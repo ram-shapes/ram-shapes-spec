@@ -1,0 +1,161 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix : <http://ram-shapes.github.io/schema#>.
+
+:Shape a owl:Class;
+  owl:oneOf (
+    :ResourceShape
+    :LiteralShape
+    :ObjectShape
+    :UnionShape
+    :SetShape
+    :OptionalShape
+    :ListShape
+    :MapShape
+  ).
+
+:lenient a owl:DatatypeProperty;
+  rdfs:domain :Shape;
+  rdfs:range xsd:boolean.
+
+:ResourceShape a owl:Class.
+:LiteralShape a owl:Class.
+
+:vocabulary a owl:ObjectProperty;
+  rdfs:range :Vocabulary.
+
+:termDatatype a owl:DatatypeProperty;
+  rdfs:domain :LiteralShape;
+  rdfs:range xsd:anyURI.
+
+:termLanguage: a owl:DatatypeProperty;
+  rdfs:domain :LiteralShape;
+  rdfs:range xsd:string.
+
+:termValue a owl:DatatypeProperty;
+  rdfs:domain [
+    a owl:Class;
+    owl:oneOf (
+      :ResourceShape
+      :LiteralShape
+    )
+  ].
+
+:keepAsTerm a owl:DatatypeProperty;
+  rdfs:domain [
+    a owl:Class;
+    owl:oneOf (
+      :ResourceShape
+      :LiteralShape
+    )
+  ];
+  rdfs:range xsd:boolean.
+
+:Vocabulary a owl:Class.
+
+:vocabItem a owl:ObjectProperty;
+  rdfs:domain :Vocabulary.
+
+:vocabKey a owl:DatatypeProperty;
+  rdfs:range xsd:string.
+
+:ObjectShape a owl:Class.
+
+:typeProperty a owl:ObjectProperty;
+  rdfs:domain :ObjectShape;
+  rdfs:range :ObjectProperty.
+
+:property a owl:ObjectProperty;
+  rdfs:domain :ObjectShape;
+  rdfs:range :ObjectProperty.
+
+:ObjectProperty a owl:Class.
+
+:name a owl:DatatypeProperty;
+  rdfs:domain :ObjectProperty;
+  rdfs:range xsd:string.
+
+:path a owl:DatatypeProperty;
+  rdfs:range :PathSequence.
+
+:PathSequence a owl:Class.
+:PathElement a owl:Class;
+  owl:oneOf (:PathExpression :PathSegment).
+
+:PathExpression a owl:Class.
+:PathSegment a owl:Class.
+
+:operator a owl:DatatypeProperty;
+  rdfs:domain :PathExpression;
+  rdfs:range [
+    a owl:DataRange;
+    owl:oneOf ("|" "^" "*" "+" "?" "!")
+  ].
+
+:predicate a owl:DatatypeProperty.
+  rdfs:domain :PathSegment.
+  rdfs:range xsd:anyURI.
+
+:shape a owl:ObjectProperty;
+  rdfs:domain [
+    a owl:Class;
+    owl:oneOf (
+      :ObjectProperty
+      :ShapeReference
+    )
+  ];
+  rdfs:range :Shape.
+
+:UnionShape a owl:Class.
+
+:variant a owl:ObjectProperty;
+  rdfs:domain :UnionShape;
+  rdfs:range :Shape.
+
+:SetShape a owl:Class.
+:OptionalShape a owl:Class.
+
+:item a owl:ObjectProperty;
+  rdfs:domain [
+    a owl:Class;
+    owl:oneOf (
+      :SetShape
+      :OptionalShape
+      :ListShape
+      :MapShape
+    )
+  ];
+  rdfs:range :Shape.
+
+:ListShape a owl:Class.
+
+:headPath a owl:ObjectProperty;
+  rdfs:domain :ListShape;
+  rdfs:range :PathSequence.
+
+:tailPath a owl:ObjectProperty;
+  rdfs:domain :ListShape;
+  rdfs:range :PathSequence.
+
+:nil a owl:ObjectProperty;
+  rdfs:domain :ListShape.
+
+:MapShape a owl:Class.
+
+:mapKey a owl:ObjectProperty;
+  rdfs:domain :MapShape;
+  rdfs:range :ShapeReference.
+
+:mapValue a owl:ObjectProperty;
+  rdfs:domain :MapShape;
+  rdfs:range :ShapeReference.
+
+:ShapeReference a owl:Class.
+
+:termPart a owl:DatatypeProperty;
+  rdfs:range [
+    a owl:DataRange;
+    owl:oneOf (:TermValue :TermDatatype :TermLanguage)
+  ].
