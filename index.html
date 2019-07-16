@@ -80,6 +80,10 @@
           <dfn>unknown</dfn>.
       </p>
       <p>
+        The specification references [[[WebIDL]]] spec:
+        <dfn data-cite="WebIDL#Exposed">Exposed</dfn>.
+      </p>
+      <p>
         The specification references the following RDF types defined in [[!rdfjs]] spec:
         <dfn data-cite="rdfjs#dom-term">Term</dfn>,
         <dfn data-cite="rdfjs#dom-namednode">NamedNode</dfn>,
@@ -119,7 +123,7 @@
         </p>
         <pre class="idl">
           typedef (NamedNode or BlankNode) ShapeID;
-          interface ShapeBase {
+          [Exposed] interface ShapeBase {
             readonly attribute ShapeID id;
             readonly attribute boolean? lenient;
           };
@@ -131,7 +135,7 @@
           <a>ResourceShape</a> describes an RDF resource term, which is either an IRI or a blank node:
         </p>
         <pre class="idl">
-        interface ResourceShape : ShapeBase {
+        [Exposed] interface ResourceShape : ShapeBase {
           /** type == "resource" */
           readonly attribute string type;
           readonly attribute (NamedNode or BlankNode)? value;
@@ -147,7 +151,7 @@
           <dfn>value</dfn>:
         </p>
         <pre class="idl">
-        interface LiteralShape : ShapeBase {
+        [Exposed] interface LiteralShape : ShapeBase {
           /** type == "literal" */
           readonly attribute string type;
           readonly attribute NamedNode? datatype;
@@ -166,7 +170,7 @@
           quickly filter a set of candidate terms by scanning only against <a>typeProperties</a>.
         </p>
         <pre class="idl">
-        interface ObjectShape : ShapeBase {
+        [Exposed] interface ObjectShape : ShapeBase {
           /** type == "object" */
           readonly attribute string type;
           getter sequence&lt;ObjectProperty&gt; typeProperties();
@@ -183,7 +187,7 @@
           matches multiple variant types.
         </p>
         <pre class="idl">
-        interface UnionShape : ShapeBase {
+        [Exposed] interface UnionShape : ShapeBase {
           /** type == "union" */
           readonly attribute string type;
           getter sequence&lt;ShapeID&gt; variants();
@@ -205,7 +209,7 @@
           in ECMAScript).
         </p>
         <pre class="idl">
-        interface OptionalShape : ShapeBase {
+        [Exposed] interface OptionalShape : ShapeBase {
           /** type == "optional" */
           readonly attribute string type;
           readonly attribute ShapeID itemShape;
@@ -219,7 +223,7 @@
           <a>SetShape</a> describes an unordered set of a single type <dfn>itemShape</dfn>.
         </p>
         <pre class="idl">
-        interface SetShape : ShapeBase {
+        [Exposed] interface SetShape : ShapeBase {
           /** type == "set" */
           readonly attribute string type;
           readonly attribute ShapeID itemShape;
@@ -238,7 +242,7 @@
           to describe other kinds of ordered structures.
         </p>
         <pre class="idl">
-        interface ListShape : ShapeBase {
+        [Exposed] interface ListShape : ShapeBase {
           /** type == "list" */
           readonly attribute string type;
           readonly attribute ShapeID itemShape;
@@ -260,7 +264,7 @@
           A <a>key</a> shape may be limited to non-composite types depending on the implementation.
         </p>
         <pre class="idl">
-        interface MapShape : ShapeBase {
+        [Exposed] interface MapShape : ShapeBase {
           /** type == "map" */
           readonly attribute string type;
           readonly attribute ShapeReference key;
@@ -280,7 +284,7 @@
           by matching against <dfn>terms</dfn> dictionary.
         </p>
         <pre class="idl">
-        interface Vocabulary {
+        [Exposed] interface Vocabulary {
           getter record&lt;DOMString, NamedNode&gt; terms();
         };
         </pre>
@@ -294,7 +298,7 @@
           a different representation of the same subject, e.g. the subject IRI itself.
         </p>
         <pre class="idl">
-        interface ObjectProperty {
+        [Exposed] interface ObjectProperty {
           readonly attribute string name;
           readonly attribute PathSequence path;
           readonly attribute ShapeID valueShape;
@@ -309,12 +313,12 @@
         <pre class="idl">
         typedef sequence&lt;PathElement&gt; PathSequence;
         typedef (PathExpression or PathSegment) PathElement;
-        interface PathExpression {
+        [Exposed] interface PathExpression {
           /** operator in ("|" or "^" or "*" or "+" or "?" or "!") */
           readonly attribute string operator;
           readonly attribute PathSequence path;
         };
-        interface PathSegment {
+        [Exposed] interface PathSegment {
           readonly attribute NamedNode predicate;
         };
         </pre>
@@ -328,7 +332,7 @@
           language or datatype of a <a>Literal</a>.
         </p>
         <pre class="idl">
-        interface ShapeReference {
+        [Exposed] interface ShapeReference {
           readonly attribute ShapeID target;
           /** part in ("value" or "datatype" or "language") */
           readonly attribute string? part;
@@ -343,7 +347,7 @@
           <code>DataTime</code>, etc).
         </p>
         <pre class="idl">
-        interface ValueMapper {
+        [Exposed] interface ValueMapper {
           unknown fromRdf(unknown value, Shape shape);
           unknown toRdf(unknown value, Shape shape);
         };
@@ -354,7 +358,7 @@
       <h2>Workflow operations</h2>
       The specification of operations on the described data types includes the following methods:
       <pre class="idl">
-      interface RamOperations {
+      [Exposed] interface RamOperations {
         sequence&lt;unknown&gt; frame(FrameParams params);
         sequence&lt;Quad&gt; flatten(FlattenParams params);
         ConstructQuery generateQuery(GenerateQueryParams params);
