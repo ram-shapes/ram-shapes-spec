@@ -1,3 +1,3 @@
-# Specification for [RAM shapes](https://ram-shapes.github.io)
+# Specification for [RAMP shapes](https://ramp-shapes.github.io)
 
-Read specification draft here: http://ram-shapes.github.io/ram-shapes-spec/
+Read specification draft here: http://ramp-shapes.github.io/ramp-shapes-spec/
