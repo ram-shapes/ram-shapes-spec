@@ -8,7 +8,7 @@
   rdfs:label "RAMP Shapes Schema".
 
 :Shape a owl:Class;
-  owl:oneOf (
+  owl:unionOf (
     :ResourceShape
     :LiteralShape
     :ObjectShape
@@ -40,7 +40,7 @@
 :termValue a owl:DatatypeProperty;
   rdfs:domain [
     a owl:Class;
-    owl:oneOf (
+    owl:unionOf (
       :ResourceShape
       :LiteralShape
     )
@@ -49,7 +49,7 @@
 :keepAsTerm a owl:DatatypeProperty;
   rdfs:domain [
     a owl:Class;
-    owl:oneOf (
+    owl:unionOf (
       :ResourceShape
       :LiteralShape
     )
@@ -85,7 +85,7 @@
 
 :PathSequence a owl:Class.
 :PathElement a owl:Class;
-  owl:oneOf (:PathExpression :PathSegment).
+  owl:unionOf (:PathExpression :PathSegment).
 
 :PathExpression a owl:Class.
 :PathSegment a owl:Class.
@@ -104,7 +104,7 @@
 :shape a owl:ObjectProperty;
   rdfs:domain [
     a owl:Class;
-    owl:oneOf (
+    owl:unionOf (
       :ObjectProperty
       :ShapeReference
     )
@@ -123,7 +123,7 @@
 :item a owl:ObjectProperty;
   rdfs:domain [
     a owl:Class;
-    owl:oneOf (
+    owl:unionOf (
       :SetShape
       :OptionalShape
       :ListShape
