@@ -74,6 +74,7 @@
       <p>
         Commonly used types and values from ECMAScript include
           <dfn data-lt='DOMString'>string</dfn>,
+          <dfn>number</dfn>,
           <dfn>boolean</dfn>,
           <dfn>null</dfn> (and <dfn data-lt="nullType">null type</dfn>),
           <dfn>undefined</dfn>,
@@ -115,14 +116,21 @@
         or MapShape
       ) Shape;
       </pre>
+      <section data-dfn-for="ShapeID" data-link-for="ShapeID">
+        <h3><dfn>ShapeID</dfn></h3>
+        <p>Shapes are referenced by <a>ShapeID</a>.</p>
+        <pre class="idl">
+          typedef (NamedNode or BlankNode) ShapeID;
+        </pre>
+      </section>
       <section data-dfn-for="ShapeBase" data-link-for="ShapeBase">
+        <h3><dfn>ShapeBase</dfn></h3>
         <p>Basic shapes properties are <dfn>id</dfn> and <dfn>lenient</dfn>.</p>
         <p>
           <a>lenient</a> property sets non-strict matching mode for shape.
           See <a data-lt='RamOperations.frame()'>frame()</a> for matching mode description.
         </p>
         <pre class="idl">
-          typedef (NamedNode or BlankNode) ShapeID;
           [Exposed] interface ShapeBase {
             readonly attribute ShapeID id;
             readonly attribute boolean? lenient;
@@ -134,10 +142,15 @@
         <p>
           <a>ResourceShape</a> describes an RDF resource term, which is either an IRI or a blank node:
         </p>
+        <p>
+          If <dfn>onlyNamed</dfn> flag is set then the shape will only match <a>NamedNode</a> but
+          not <a>BlankNode</a>.
+        </p>
         <pre class="idl">
         [Exposed] interface ResourceShape : ShapeBase {
           /** type == "resource" */
           readonly attribute string type;
+          readonly attribute boolean? onlyNamed;
           readonly attribute (NamedNode or BlankNode)? value;
           readonly attribute Vocabulary? vocabulary;
         };
@@ -222,11 +235,18 @@
         <p>
           <a>SetShape</a> describes an unordered set of a single type <dfn>itemShape</dfn>.
         </p>
+        <p>
+          If <dfn>minCount</dfn> or <dfn>maxCount</dfn> is specified then the shape will match
+          only if matching set contains equal or more items than <a>minCount</a> and
+          equal or less items than <a>maxCount</a>.
+        </p>
         <pre class="idl">
         [Exposed] interface SetShape : ShapeBase {
           /** type == "set" */
           readonly attribute string type;
           readonly attribute ShapeID itemShape;
+          readonly attribute number? minCount;
+          readonly attribute number? maxCount;
         };
         </pre>
       </section>
@@ -246,8 +266,8 @@
           /** type == "list" */
           readonly attribute string type;
           readonly attribute ShapeID itemShape;
-          readonly attribute PathSequence? headPath;
-          readonly attribute PathSequence? tailPath;
+          readonly attribute PropertyPath? headPath;
+          readonly attribute PropertyPath? tailPath;
           readonly attribute NamedNode? nil;
         };
         </pre>
@@ -297,31 +317,134 @@
           <dfn data-lt="valueShape">value shape</dfn>. A property with zero-length path allows to embed
           a different representation of the same subject, e.g. the subject IRI itself.
         </p>
+        <p>
+          If <dfn>transient</dfn> flag is set then in <a>RamOperations.frame()</a> the framing result
+          will be discarded; in <a>RamOperations.flatten()</a> the value for <a>valueShape</a> will be
+          synthesized or an error will be thrown if it is not possible.
+        </p>
         <pre class="idl">
         [Exposed] interface ObjectProperty {
           readonly attribute string name;
-          readonly attribute PathSequence path;
+          readonly attribute PropertyPath path;
           readonly attribute ShapeID valueShape;
+          readonly attribute boolean? transient;
         };
         </pre>
       </section>
-      <section data-dfn-for="PathSequence" data-link-for="PathSequence">
-        <h3><dfn>PathSequence</dfn> interface</h3>
+      <section data-dfn-for="PropertyPath" data-link-for="PropertyPath">
+        <h3><dfn>PropertyPath</dfn> interface</h3>
         <p>
-          <a>PathSequence</a> describes a property path in RDF graph.
+          <a>PropertyPath</a> describes a property path in RDF graph.
         </p>
         <pre class="idl">
-        typedef sequence&lt;PathElement&gt; PathSequence;
-        typedef (PathExpression or PathSegment) PathElement;
-        [Exposed] interface PathExpression {
-          /** operator in ("|" or "^" or "*" or "+" or "?" or "!") */
-          readonly attribute string operator;
-          readonly attribute PathSequence path;
-        };
-        [Exposed] interface PathSegment {
-          readonly attribute NamedNode predicate;
-        };
+        typedef (
+          PredicatePath or
+          SequencePath or
+          InversePath or
+          AlternativePath or
+          ZeroOrMorePath or
+          ZeroOrOnePath or
+          OneOrMorePath
+        ) PropertyPath;
         </pre>
+        <section data-dfn-for="PredicatePath" data-link-for="PredicatePath">
+          <h3><dfn>PredicatePath</dfn> path kind</h3>
+          <p>
+            <a>PredicatePath</a> describes a property path represented by a single <a>NamedNode</a>
+            predicate.
+          </p>
+          <pre class="idl">
+          [Exposed] interface PredicatePath {
+            /** type == "predicate" */
+            readonly attribute string type;
+            readonly attribute NamedNode predicate;
+          };
+          </pre>
+        </section>
+        <section data-dfn-for="SequencePath" data-link-for="SequencePath">
+          <h3><dfn>SequencePath</dfn> path kind</h3>
+          <p>
+            <a>SequencePath</a> describes a property path which is an ordered sequence
+            of <a>PropertyPath</a> elements.
+          </p>
+          <pre class="idl">
+          [Exposed] interface SequencePath {
+            /** type == "sequence" */
+            readonly attribute string type;
+            getter sequence&lt;PropertyPath&gt; sequence_();
+          };
+          </pre>
+        </section>
+        <section data-dfn-for="InversePath" data-link-for="InversePath">
+          <h3><dfn>InversePath</dfn> path kind</h3>
+          <p>
+            <a>InversePath</a> describes a property path which is an inverse of
+            another <a>PropertyPath</a>.
+          </p>
+          <pre class="idl">
+          [Exposed] interface InversePath {
+            /** type == "inverse" */
+            readonly attribute string type;
+            readonly attribute PropertyPath inverse;
+          };
+          </pre>
+        </section>
+        <section data-dfn-for="AlternativePath" data-link-for="AlternativePath">
+          <h3><dfn>AlternativePath</dfn> path kind</h3>
+          <p>
+            <a>AlternativePath</a> describes a property path which is a union of
+            alternative <a>PropertyPath</a> elements.
+          </p>
+          <pre class="idl">
+          [Exposed] interface AlternativePath {
+            /** type == "alternative" */
+            readonly attribute string type;
+            getter sequence&lt;PropertyPath&gt; alternatives();
+          };
+          </pre>
+        </section>
+        <section data-dfn-for="ZeroOrMorePath" data-link-for="ZeroOrMorePath">
+          <h3><dfn>ZeroOrMorePath</dfn> path kind</h3>
+          <p>
+            <a>ZeroOrMorePath</a> describes a property path which is a zero or more
+            repetitions of another <a>PropertyPath</a>.
+          </p>
+          <pre class="idl">
+          [Exposed] interface ZeroOrMorePath {
+            /** type == "zeroOrMore" */
+            readonly attribute string type;
+            readonly attribute PropertyPath zeroOrMore;
+          };
+          </pre>
+        </section>
+        <section data-dfn-for="ZeroOrOnePath" data-link-for="ZeroOrOnePath">
+          <h3><dfn>ZeroOrOnePath</dfn> path kind</h3>
+          <p>
+            <a>ZeroOrOnePath</a> describes a property path which is a zero or one
+            repetition of another <a>PropertyPath</a>.
+          </p>
+          <pre class="idl">
+          [Exposed] interface ZeroOrOnePath {
+            /** type == "zeroOrOne" */
+            readonly attribute string type;
+            readonly attribute PropertyPath zeroOrOne;
+          };
+          </pre>
+        </section>
+        <section data-dfn-for="OneOrMorePath" data-link-for="OneOrMorePath">
+          <h3><dfn>OneOrMorePath</dfn> path kind</h3>
+          <p>
+            <a>OneOrMorePath</a> describes a property path which is a one or more
+            repetitions of another <a>PropertyPath</a>.
+          </p>
+          <pre class="idl">
+          [Exposed] interface OneOrMorePath {
+            /** type == "oneOrMore" */
+            readonly attribute string type;
+            readonly attribute PropertyPath oneOrMore;
+          };
+          </pre>
+        </section>
       </section>
       <section data-dfn-for="ShapeReference" data-link-for="ShapeReference">
         <h3><dfn>ShapeReference</dfn> interface</h3>
