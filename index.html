@@ -100,6 +100,19 @@
         The specification references the following types from [[!SPARQL.js]] query AST:
         <dfn>ConstructQuery</dfn>.
       </p>
+      <p>
+        The specification uses the following prefix definitions for examples:
+        <pre class="ttl">
+          @prefix rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt;.
+          @prefix rdfs: &lt;http://www.w3.org/2000/01/rdf-schema#&gt;.
+          @prefix xsd: &lt;http://www.w3.org/2001/XMLSchema#&gt;.
+          @prefix owl: &lt;http://www.w3.org/2002/07/owl#&gt;.
+          @prefix dctypes: &lt;http://purl.org/dc/dcmitype/&gt;.
+          @prefix sc: &lt;http://iiif.io/api/presentation/2#&gt;.
+          @prefix : &lt;http://ramp-shapes.github.io/schema#&gt;.
+          @prefix ex: &lt;http://example.com/shapes#&gt;.
+        </pre>
+      </p>
     </section>
     <section data-dfn-for="Shape" data-link-for="Shape">
       <h2><dfn>Shape</dfn> type constructors</h2>
@@ -155,6 +168,53 @@
           readonly attribute Vocabulary? vocabulary;
         };
         </pre>
+        <aside class="example" title="IRI only resource shape">
+          <p>
+            This shape matches only IRIs, e.g. <code>&lt;http://example.com/resource1&gt;</code>
+            but not blank nodes:
+          </p>
+          <pre class="ttl">
+          ex:AnyIri a :ResourceShape;
+            :onlyNamed true;
+          </pre>
+        </aside>
+        <aside class="example" title="Constant resource shape">
+          <p>
+            This shape matches only <code>dcmit:Image</code> term:
+          </p>
+          <pre class="ttl">
+          ex:ConstantIri a :ResourceShape;
+            :termValue dcmit:Image.
+          </pre>
+        </aside>
+        <section data-dfn-for="Vocabulary" data-link-for="Vocabulary">
+          <h3><dfn>Vocabulary</dfn> interface</h3>
+          <p>
+            <a>Vocabulary</a> describes a mapping between <a>NamedNode</a> terms and <a>string</a> keys.
+            The mapping allows to refer to RDF resources by short names in
+            by matching against <dfn>terms</dfn> dictionary.
+          </p>
+          <pre class="idl">
+          [Exposed] interface Vocabulary {
+            getter record&lt;DOMString, NamedNode&gt; terms();
+          };
+          </pre>
+          <aside class="example" title="Resource shape with vocabulary">
+            <p>
+              This shape matches any IRI from the specified vocabulary and frames it as corresponding
+              key, e.g. <code>dctypes:Sound</code> IRI will be framed as <code>"sound"</code> string:
+            </p>
+            <pre class="ttl">
+            ex:ResourceType a :ResourceShape;
+              :vocabulary [
+                :vocabItem
+                  [ :vocabKey "sound"; :termValue dctypes:Sound ],
+                  [ :vocabKey "image"; :termValue dctypes:Image ],
+                  [ :vocabKey "text"; :termValue dctypes:Text ]
+              ].
+            </pre>
+          </aside>
+        </section>
       </section>
       <section data-dfn-for="LiteralShape" data-link-for="LiteralShape">
         <h3><dfn>LiteralShape</dfn> type</h3>
@@ -172,6 +232,34 @@
           readonly attribute Literal? value;
         };
         </pre>
+        <aside class="example" title="Literal shape with datatype">
+          <p>
+            This shape matches only <code>xsd:string</code> literals:
+          </p>
+          <pre class="ttl">
+          ex:PlainString a :LiteralShape;
+            :termDatatype xsd:string.
+          </pre>
+        </aside>
+        <aside class="example" title="Literal shape with language tag">
+          <p>
+            This shape matches literals with <code>rdf:langString</code> datatype and
+            <code>"en"</code> language tag:
+          </p>
+          <pre class="ttl">
+          ex:EnLiteral a :LiteralShape;
+            :termLanguage "en".
+          </pre>
+        </aside>
+        <aside class="example" title="Constant literal shape">
+          <p>
+            This shape matches only <code>"JPEG"</code> literals:
+          </p>
+          <pre class="ttl">
+          ex:ConstantLiteral a :ResourceShape;
+            :termValue "JPEG".
+          </pre>
+        </aside>
       </section>
       <section data-dfn-for="ObjectShape" data-link-for="ObjectShape">
         <h3><dfn>ObjectShape</dfn> type</h3>
@@ -179,8 +267,9 @@
           <a>ObjectShape</a> describes a product type of heterogeneous types accessible through
           named properties. Both <dfn>typeProperties</dfn> and <dfn>properties</dfn> define
           properties for a shape and the difference is when a candidate term must match given
-          object shape if and only if all <a>typeProperties</a> matches, which allows to
-          quickly filter a set of candidate terms by scanning only against <a>typeProperties</a>.
+          object shape if and only if all <a>typeProperties</a> matches, which allows to produce
+          better diagnostic reports if <a>typeProperties</a> match but some of the
+          <a>properties</a> does not.
         </p>
         <pre class="idl">
         [Exposed] interface ObjectShape : ShapeBase {
@@ -190,6 +279,113 @@
           getter sequence&lt;ObjectProperty&gt; properties();
         };
         </pre>
+        <aside class="example" title="Simple object shape">
+          <p>
+            This shape matches IRI or blank term with two edges <code>ex:xCoord</code> and
+            <code>ex:yCoord</code> and frames it into object <code>{ x: number; y: number }</code>:
+          </p>
+          <pre class="ttl">
+          ex:PointShape a :ObjectShape;
+            :property [
+              :name "x";
+              :path ex:xCoord;
+              :shape [ a :LiteralShape; :termDatatype xsd:integer ]
+            ].
+            :property [
+              :name "y";
+              :path ex:yCoord;
+              :shape [ a :LiteralShape; :termDatatype xsd:integer ]
+            ].
+          </pre>
+        </aside>
+        <aside class="example" title="Object shape with type property">
+          <p>
+            This shape matches IRI or blank term with <code>rdf:type</code> equal to <code>ex:Note</code>
+            and <code>ex:noteContent</code> string. If <code>ex:noteContent</code> is missing or
+            does not contain <code>xsd:string</code> literal then the <code>"text"</code> property
+            specifically will be pointed at by diagnostic reporting instead of the
+            whole <code>ex:NoteShape</code>.
+          </p>
+          <pre class="ttl">
+          ex:NoteShape a :ObjectShape;
+            :typeProperty [
+              :name "type";
+              :path rdf:type;
+              :shape [ a :ResourceShape; :termValue ex:Note ]
+            ];
+            :property [
+              :name "text";
+              :path ex:noteContent;
+              :shape [ a :LiteralShape; :termDatatype xsd:string ]
+            ].
+          </pre>
+        </aside>
+        <section data-dfn-for="ObjectProperty" data-link-for="ObjectProperty">
+          <h3><dfn>ObjectProperty</dfn> interface</h3>
+          <p>
+            <a>ObjectProperty</a> describes a named property in a record type.
+            It is specified by its <dfn>name</dfn> string, <dfn data-lt="path">property path</dfn> and
+            <dfn data-lt="valueShape">value shape</dfn>. A property with zero-length path allows to embed
+            a different representation of the same subject, e.g. the subject IRI itself.
+          </p>
+          <p>
+            If <dfn>transient</dfn> flag is set then in <a data-link-for="RamOperations">frame()</a>
+            the framing result will be discarded; in <a data-link-for="RamOperations">flatten()</a>
+            the value for <a>valueShape</a> will be synthesized or an error will be thrown if it is not possible.
+          </p>
+          <pre class="idl">
+          [Exposed] interface ObjectProperty {
+            readonly attribute string name;
+            readonly attribute PropertyPath path;
+            readonly attribute ShapeID valueShape;
+            readonly attribute boolean? transient;
+          };
+          </pre>
+          <aside class="example" title="Self-referencing property">
+            <p>
+              This shape matches IRI or blank term value into a property <code>"iri"</code> of itself:
+            </p>
+            <pre class="ttl">
+            ex:ItemShape a :ObjectShape;
+              :property [
+                :name "iri";
+                :path ();
+                :shape [ a :ResourceShape ]
+              ];
+              :property [
+                :name "label";
+                :path rdfs:label;
+                :shape [ a :LiteralShape; :termDatatype xsd:string ]
+              ].
+            </pre>
+            <p>
+              For other kinds of property paths see <a>PropertyPath</a>.
+            </p>
+          </aside>
+          <aside class="example" title="Transient property">
+            <p>
+              This shape matches IRI or blank term with <code>rdf:type</code> equal to
+              <code>sc:Manifest</code> and <code>rdfs:label</code> literal but discards
+              <code>"type"</code> property in <a data-link-for="RamOperations">frame()</a> and
+              synthesizes the value <code>sc:Manifest</code> from corresponding shape in
+              <a data-link-for="RamOperations">flatten()</a>:
+            </p>
+            <pre class="ttl">
+            ex:ManifestShape a :ObjectShape;
+              :typeProperty [
+                :name "type";
+                :path rdf:type;
+                :transient true;
+                :shape [ a :ResourceShape; :termValue sc:Manifest ]
+              ];
+              :property [
+                :name "label";
+                :path rdfs:label;
+                :shape [ a :LiteralShape; :termDatatype xsd:string ]
+              ].
+            </pre>
+          </aside>
+        </section>
       </section>
       <section data-dfn-for="UnionShape" data-link-for="UnionShape">
         <h3><dfn>UnionShape</dfn> type</h3>
@@ -206,6 +402,30 @@
           getter sequence&lt;ShapeID&gt; variants();
         };
         </pre>
+        <aside class="example" title="Union of different datatypes">
+          <p>
+            This shape matches either <code>xsd:integer</code>, <code>xsd:string</code>
+            or <code>xsd:boolean</code> terms:
+          </p>
+          <pre class="ttl">
+          ex:IntegerOrString a :UnionShape;
+            :variant
+              [ a :LiteralShape; :termDatatype xsd:integer ],
+              [ a :LiteralShape; :termDatatype xsd:string ],
+              [ a :LiteralShape; :termDatatype xsd:boolean ].
+          </pre>
+        </aside>
+        <aside class="example" title="Union of literal and RDF list">
+          <p>
+            This shape matches either a a single string or RDF list of strings:
+          </p>
+          <pre class="ttl">
+          ex:StringOrList a :UnionShape;
+            :variant
+              [ a :LiteralShape; :termDatatype xsd:string ],
+              [ a :ListShape; :item [ a :LiteralShape; :termDatatype xsd:string ] ].
+          </pre>
+        </aside>
       </section>
       <section data-dfn-for="OptionalShape" data-link-for="OptionalShape">
         <h3><dfn>OptionalShape</dfn> type</h3>
@@ -229,6 +449,38 @@
           readonly attribute nullType? emptyValue;
         };
         </pre>
+        <aside class="example" title="Optional literal">
+          <p>
+            This shape matches either <code>xsd:string</code> only if a value is present
+            (it matches only and only if a value has <code>xsd:string</code> type and won't
+            match e.g. <code>xsd:integer</code> literal):
+          </p>
+          <pre class="ttl">
+          ex:MaybeString a :OptionalShape;
+            :item [ :LiteralShape; :termDatatype xsd:string ].
+          </pre>
+        </aside>
+        <aside class="example" title="Optional object property">
+          <p>
+            This shape matches an object with optional property value:
+          </p>
+          <pre class="ttl">
+          ex:LocationShape a :ObjectShape;
+            :typeProperty [
+              :name "type";
+              :path rdf:type;
+              :shape [ a :ResourceShape; :termValue ex:Location ]
+            ]
+            :property [
+              :name "label";
+              :path rdfs:label;
+              :shape [
+                a :OptionalShape;
+                :item [ :LiteralShape; :termDatatype xsd:string ]
+              ]
+            ].
+          </pre>
+        </aside>
       </section>
       <section data-dfn-for="SetShape" data-link-for="SetShape">
         <h3><dfn>SetShape</dfn> type</h3>
@@ -249,6 +501,42 @@
           readonly attribute number? maxCount;
         };
         </pre>
+        <aside class="example" title="Set of literals">
+          <p>
+            This shape matches a set (unordered array) of <code>xsd:integer</code> literals:
+          </p>
+          <pre class="ttl">
+          ex:IntegerSet a :SetShape;
+            :item [ a :LiteralShape; :termDatatype xsd:integer ].
+          </pre>
+        </aside>
+        <aside class="example" title="Set cardinality restrictions">
+          <p>
+            This shape matches a set with &gt;= 1 and &lt;= 3 <code>xsd:string</code> items:
+          </p>
+          <pre class="ttl">
+          ex:BoundedSet a :SetShape;
+            :item [ a :LiteralShape; :termDatatype xsd:string ]
+            :minCount 1;
+            :maxCount 3.
+          </pre>
+        </aside>
+        <aside class="example" title="Object property with multiple values">
+          <p>
+            This shape matches an object with multiple property values:
+          </p>
+          <pre class="ttl">
+          ex:LotteryResult a :ObjectShape;
+            :property [
+              :name "winningNumbers";
+              :path ex:winningNumber;
+              :shape [
+                a :SetShape;
+                :item [ :LiteralShape; :termDatatype xsd:integer ]
+              ]
+            ].
+          </pre>
+        </aside>
       </section>
       <section data-dfn-for="ListShape" data-link-for="ListShape">
         <h3><dfn>ListShape</dfn> type</h3>
@@ -266,11 +554,24 @@
           /** type == "list" */
           readonly attribute string type;
           readonly attribute ShapeID itemShape;
+          /** @default rdf:first */
           readonly attribute PropertyPath? headPath;
+          /** @default rdf:rest */
           readonly attribute PropertyPath? tailPath;
+          /** @default rdf:nil */
           readonly attribute NamedNode? nil;
         };
         </pre>
+        <aside class="example" title="List shapes">
+          <p>
+            This shape matches an RDF list (ordered array) of <code>xsd:integer</code> literals,
+            e.g. <code>(1 2 3)</code> framed as <code>[1, 2, 3]</code>:
+          </p>
+          <pre class="ttl">
+          ex:IntegerList a :ListShape;
+            :item [ a :LiteralShape; :termDatatype xsd:integer ].
+          </pre>
+        </aside>
       </section>
       <section data-dfn-for="MapShape" data-link-for="MapShape">
         <h3><dfn>MapShape</dfn> type</h3>
@@ -292,45 +593,75 @@
           readonly attribute ShapeID itemShape;
         };
         </pre>
+        <aside class="example" title="Map shape indexed by property">
+          <p>
+            This shape matches an unordered set of objects and indexes it by <code>"name"</code> property,
+            so the framed object looks like <code>{ [propertyName: string]: string | integer | boolean }</code>:
+          </p>
+          <pre class="ttl">
+          ex:PropertyMap a :MapShape;
+            :item [
+              a :ObjectShape;
+              :property [
+                :name "name";
+                :path ex:propertyName;
+                :shape _:propertyNameShape
+              ];
+              :property [
+                :name "value";
+                :path ex:propertyValue;
+                :shape _:propertyValueShape
+              ]
+            ];
+            :mapKey [ :shape _:propertyNameShape ];
+            :mapValue [ :shape _:propertyValueShape ].
+
+          _:propertyNameShape a :LiteralShape;
+            :termDatatype xsd:string.
+
+          _:propertyValueShape a :UnionShape;
+            :variant
+              [ a :LiteralShape; :termDatatype xsd:string ],
+              [ a :LiteralShape; :termDatatype xsd:integer ],
+              [ a :LiteralShape; :termDatatype xsd:boolean ].
+          </pre>
+        </aside>
+        <section data-dfn-for="ShapeReference" data-link-for="ShapeReference">
+          <h3><dfn>ShapeReference</dfn> interface</h3>
+          <p>
+            <a>ShapeReference</a> describes a reference to a candidate term matched by
+            <dfn>target</dfn> <a>Shape</a>.
+            A reference may target whole <a>Term</a> value or a specific <dfn>part</dfn> such as
+            language or datatype of a <a>Literal</a>.
+          </p>
+          <pre class="idl">
+          [Exposed] interface ShapeReference {
+            readonly attribute ShapeID target;
+            /** part in ("value" or "datatype" or "language") */
+            readonly attribute string? part;
+          };
+          </pre>
+          <aside class="example" title="Map shape indexed by language tag">
+            <p>
+              This shape matches an unordered set of <code>rdf:langString</code> literals and
+              indexes it by language tag, so the framed object looks like
+              <code>{ [languageTag: string]: string }</code>:
+            </p>
+            <pre class="ttl">
+            ex:LocalizedLabels a :MapShape;
+              :item labelLiteral;
+              :mapKey [ :shape _:labelLiteral; :termPart :TermLanguage ];
+              :mapValue [ :shape _:labelLiteral; :termPart :TermValue ].
+  
+            _:labelLiteral a :LiteralShape;
+              :termDatatype rdf:langString.
+            </pre>
+          </aside>
+        </section>
       </section>
     </section>
     <section>
-      <h2>Utility interfaces</h2>
-      <section data-dfn-for="Vocabulary" data-link-for="Vocabulary">
-        <h3><dfn>Vocabulary</dfn> interface</h3>
-        <p>
-          <a>Vocabulary</a> describes a mapping between <a>NamedNode</a> terms and <a>string</a> keys.
-          The mapping allows to refer to RDF resources by short names in
-          by matching against <dfn>terms</dfn> dictionary.
-        </p>
-        <pre class="idl">
-        [Exposed] interface Vocabulary {
-          getter record&lt;DOMString, NamedNode&gt; terms();
-        };
-        </pre>
-      </section>
-      <section data-dfn-for="ObjectProperty" data-link-for="ObjectProperty">
-        <h3><dfn>ObjectProperty</dfn> interface</h3>
-        <p>
-          <a>ObjectProperty</a> describes a named property in a record type.
-          It is specified by its <dfn>name</dfn> string, <dfn data-lt="path">property path</dfn> and
-          <dfn data-lt="valueShape">value shape</dfn>. A property with zero-length path allows to embed
-          a different representation of the same subject, e.g. the subject IRI itself.
-        </p>
-        <p>
-          If <dfn>transient</dfn> flag is set then in <a>RamOperations.frame()</a> the framing result
-          will be discarded; in <a>RamOperations.flatten()</a> the value for <a>valueShape</a> will be
-          synthesized or an error will be thrown if it is not possible.
-        </p>
-        <pre class="idl">
-        [Exposed] interface ObjectProperty {
-          readonly attribute string name;
-          readonly attribute PropertyPath path;
-          readonly attribute ShapeID valueShape;
-          readonly attribute boolean? transient;
-        };
-        </pre>
-      </section>
+      <h2>Property paths</h2>
       <section data-dfn-for="PropertyPath" data-link-for="PropertyPath">
         <h3><dfn>PropertyPath</dfn> interface</h3>
         <p>
@@ -360,6 +691,15 @@
             readonly attribute NamedNode predicate;
           };
           </pre>
+          <aside class="example" title="Simple predicate path">
+            <pre class="ttl">
+            _:shape :property [
+              :name "type";
+              :path rdf:type;
+              :shape [ a :ResourceShape ]
+            ].
+            </pre>
+          </aside>
         </section>
         <section data-dfn-for="SequencePath" data-link-for="SequencePath">
           <h3><dfn>SequencePath</dfn> path kind</h3>
@@ -374,6 +714,24 @@
             getter sequence&lt;PropertyPath&gt; sequence_();
           };
           </pre>
+          <aside class="example" title="Simple sequence path">
+            <pre class="ttl">
+            _:shape :property [
+              :name "typeName";
+              :path (rdf:type rdfs:label);
+              :shape [ a :LiteralShape ]
+            ].
+            </pre>
+          </aside>
+          <aside class="example" title="Self-referencing path">
+            <pre class="ttl">
+            _:shape :property [
+              :name "iri";
+              :path ();
+              :shape [ a :ResourceShape ]
+            ].
+            </pre>
+          </aside>
         </section>
         <section data-dfn-for="InversePath" data-link-for="InversePath">
           <h3><dfn>InversePath</dfn> path kind</h3>
@@ -388,6 +746,15 @@
             readonly attribute PropertyPath inverse;
           };
           </pre>
+          <aside class="example" title="Inverse path">
+            <pre class="ttl">
+            _:classShape :property [
+              :name "derivedClasses";
+              :path [ :inversePath rdfs:subClassOf ];
+              :shape [ a :SetShape; :item _:classShape ]
+            ].
+            </pre>
+          </aside>
         </section>
         <section data-dfn-for="AlternativePath" data-link-for="AlternativePath">
           <h3><dfn>AlternativePath</dfn> path kind</h3>
@@ -402,6 +769,15 @@
             getter sequence&lt;PropertyPath&gt; alternatives();
           };
           </pre>
+          <aside class="example" title="Alternative path">
+            <pre class="ttl">
+            _:shape :property [
+              :name "labels";
+              :path [ :alternativePath (rdf:label skos:prefLabel) ];
+              :shape [ a :SetShape; :item [ a :LiteralShape ] ]
+            ].
+            </pre>
+          </aside>
         </section>
         <section data-dfn-for="ZeroOrMorePath" data-link-for="ZeroOrMorePath">
           <h3><dfn>ZeroOrMorePath</dfn> path kind</h3>
@@ -416,6 +792,15 @@
             readonly attribute PropertyPath zeroOrMore;
           };
           </pre>
+          <aside class="example" title="Zero or more repetitions of path">
+            <pre class="ttl">
+            _:shape :property [
+              :name "transitiveTypes";
+              :path (rdf:type [ :zeroOrMore rdfs:subClassOf ]);
+              :shape [ a :SetShape; :item [ a :ResourceShape ] ]
+            ].
+            </pre>
+          </aside>
         </section>
         <section data-dfn-for="ZeroOrOnePath" data-link-for="ZeroOrOnePath">
           <h3><dfn>ZeroOrOnePath</dfn> path kind</h3>
@@ -430,6 +815,15 @@
             readonly attribute PropertyPath zeroOrOne;
           };
           </pre>
+          <aside class="example" title="Zero or one repetitions of path">
+            <pre class="ttl">
+            _:shape :property [
+              :name "value";
+              :path (ex:hasValue [ :zeroOrOne rdf:value ]);
+              :shape [ a :LiteralShape ]
+            ].
+            </pre>
+          </aside>
         </section>
         <section data-dfn-for="OneOrMorePath" data-link-for="OneOrMorePath">
           <h3><dfn>OneOrMorePath</dfn> path kind</h3>
@@ -444,37 +838,16 @@
             readonly attribute PropertyPath oneOrMore;
           };
           </pre>
+          <aside class="example" title="One or more repetitions of path">
+            <pre class="ttl">
+            _:shape :property [
+              :name "parentTypes";
+              :path [ :oneOrMore rdfs:subClassOf ];
+              :shape [ a :SetShape; :item [ a :ResourceShape ] ]
+            ].
+            </pre>
+          </aside>
         </section>
-      </section>
-      <section data-dfn-for="ShapeReference" data-link-for="ShapeReference">
-        <h3><dfn>ShapeReference</dfn> interface</h3>
-        <p>
-          <a>ShapeReference</a> describes a reference to a candidate term matched by
-          <dfn>target</dfn> <a>Shape</a>.
-          A reference may target whole <a>Term</a> value or a specific <dfn>part</dfn> such as
-          language or datatype of a <a>Literal</a>.
-        </p>
-        <pre class="idl">
-        [Exposed] interface ShapeReference {
-          readonly attribute ShapeID target;
-          /** part in ("value" or "datatype" or "language") */
-          readonly attribute string? part;
-        };
-        </pre>
-      </section>
-      <section data-dfn-for="ValueMapper" data-link-for="ValueMapper">
-        <h3><dfn>ValueMapper</dfn> interface</h3>
-        <p>
-          <a>ValueMapper</a> describes two-way mapping between atomic RDF terms and "leaf"
-          data structures such as primitive types (<code>number</code>, <code>string</code>,
-          <code>DataTime</code>, etc).
-        </p>
-        <pre class="idl">
-        [Exposed] interface ValueMapper {
-          unknown fromRdf(unknown value, Shape shape);
-          unknown toRdf(unknown value, Shape shape);
-        };
-        </pre>
       </section>
     </section>
     <section>
@@ -492,28 +865,27 @@
         <h3><dfn data-lt="RamOperations.frame()">frame()</dfn> operation</h3>
         <p>
           <a data-lt='RamOperations.frame()'>frame()</a> matches RDF <dfn>dataset</dfn> into
-          <dfn>shapes</dfn> from enty point <dfn>rootShape</dfn> and forms data structures
-          corresponding to these shapes.
+          values from entry shape <dfn>shape</dfn> and forms data structures corresponding to
+          these shapes.
           This operation is usually referred to as <em>RDF lowering</em> (see [[!!XSPARQL]]).
         </p>
         <pre class="idl">
         dictionary FrameParams {
-          ShapeID rootShape;
-          sequence&lt;Shape&gt; shapes;
-          Dataset dataset;
+          required ShapeID shape;
+          required Dataset dataset;
           ValueMapper? mapper;
         };
         </pre>
         <p>
           Returns: <code class="idl">sequence&lt;unknown&gt;</code> &mdash; all found matches
-          where each one is an instance of <a>rootShape</a>.
+          where each one is an instance of <a>shape</a>.
         </p>
         <section>
           <h4>Frame matching mode</h4>
           <p>
             The matching for each shape may operate in either <code>strict</code> or
             <code>lenient</code> mode. The mode initializes as <code>lenient</code> and propagates
-            downwards from <a>rootShape</a>, changing at these points:
+            downwards from <a>shape</a>, changing at these points:
             <ul>
               <li>
                 If <a>ObjectShape</a> has <a data-lt="ObjectShape.typeProperties">typeProperties</a>
@@ -531,20 +903,34 @@
             terms are ignored and produce no matches for given shape.
           </p>
         </section>
+        <section data-dfn-for="ValueMapper" data-link-for="ValueMapper">
+          <h3><dfn>ValueMapper</dfn> interface</h3>
+          <p>
+            <a>ValueMapper</a> describes two-way mapping between atomic RDF terms and "leaf"
+            data structures such as primitive types (<code>number</code>, <code>string</code>,
+            <code>DataTime</code>, etc) for <a data-link-for="RamOperations">frame()</a> and
+            <a data-link-for="RamOperations">flatten()</a>.
+          </p>
+          <pre class="idl">
+          [Exposed] interface ValueMapper {
+            unknown fromRdf(unknown value, Shape shape);
+            unknown toRdf(unknown value, Shape shape);
+          };
+          </pre>
+        </section>
       </section>
       <section data-dfn-for="FlattenParams" data-link-for="FlattenParams">
         <h3><dfn data-lt="RamOperations.flatten()">flatten()</dfn> operation</h3>
         <p>
           <a data-lt='RamOperations.flatten()'>flatten()</a> generates
           <a data-lt="Dataset">RDF dataset</a> from <dfn>value</dfn> which must be an instance
-          of <dfn>rootShape</dfn> entry point and contain valus described by <dfn>shapes</dfn>.
+          of <dfn>shape</dfn> entry point.
           This operation is usually referred to as <em>RDF lifting</em> (see [[XSPARQL]]).
         </p>
         <pre class="idl">
         dictionary FlattenParams {
-          ShapeID rootShape;
-          sequence&lt;Shape&gt; shapes;
-          unknown value;
+          required ShapeID shape;
+          required unknown value;
           ValueMapper? mapper;
         };
         </pre>
@@ -558,13 +944,11 @@
         <p>
           <a data-lt='RamOperations.generateQuery()'>generateQuery()</a> generates SPARQL
           <a data-cite='sparql11-query#construct'>CONSTRUCT query</a> to fetch a subset
-          of RDF graph data necessary to match given <dfn>shapes</dfn> starting from entry
-          point <dfn>rootShape</dfn>.
+          of RDF graph data necessary to match given <dfn>shape</dfn>.
         </p>
         <pre class="idl">
         dictionary GenerateQueryParams {
-          ShapeID rootShape;
-          sequence&lt;Shape&gt; shapes;
+          required ShapeID shape;
           NamedNode? base;
           record&lt;DOMString, string&gt;? prefixes;
         };
