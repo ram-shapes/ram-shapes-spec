@@ -1,0 +1,35 @@
+pre.ramp-dataset,
+pre.ramp-framed {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+table.ramp-op-result {
+    border-collapse: collapse;
+}
+table.ramp-op-result > thead td {
+    text-align: center;
+}
+table.ramp-op-result td {
+    border: 1px solid gray;
+}
+
+.ramp-empty-dataset,
+.ramp-no-matches,
+.ramp-match-error {
+    margin: 0 5px;
+}
+.ramp-empty-dataset::before {
+    content: '∅ ';
+}
+.ramp-no-matches::before {
+    content: '∅ ';
+}
+.ramp-match-error::before {
+    content: '❌ ';
+}
+
+.ramp-todo {
+    background-color: yellow;
+    width: min-content;
+}

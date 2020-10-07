@@ -74,38 +74,66 @@
   rdfs:domain :ObjectShape;
   rdfs:range :ObjectProperty.
 
+:computedProperty a owl:ObjectProperty;
+  rdfs:domain :ObjectShape;
+  rdfs:range :ComputedProperty.
+
 :ObjectProperty a owl:Class.
+:ComputedProperty a owl:Class.
 
 :name a owl:DatatypeProperty;
-  rdfs:domain :ObjectProperty;
+  rdfs:domain [
+    a owl:Class;
+    owl:unionOf (:ObjectProperty :ComputedProperty)
+  ];
   rdfs:range xsd:string.
 
-:path a owl:DatatypeProperty;
-  rdfs:range :PathSequence.
+:path a owl:ObjectProperty;
+  rdfs:range :PropertyPath.
 
-:PathSequence a owl:Class.
-:PathElement a owl:Class;
-  owl:unionOf (:PathExpression :PathSegment).
+:PropertyPath a owl:Class;
+  owl:unionOf (
+    xsd:anyURI
+    :SequencePath
+    :InversePath
+    :AlternativePath
+    :ZeroOrMorePath
+    :ZeroOrOnePath
+    :OneOrMorePath
+  ).
 
-:PathExpression a owl:Class.
-:PathSegment a owl:Class.
+:SequencePath a owl:Class.
+:InversePath a owl:Class.
+:AlternativePath a owl:Class.
+:ZeroOrMorePath a owl:Class.
+:ZeroOrOnePath a owl:Class.
+:OneOrMorePath a owl:Class.
 
-:operator a owl:DatatypeProperty;
-  rdfs:domain :PathExpression;
-  rdfs:range [
-    a owl:DataRange;
-    owl:oneOf ("|" "^" "*" "+" "?" "!")
-  ].
+:inversePath a owl:ObjectProperty;
+  rdfs:domain :InversePath;
+  rdfs:range :PropertyPath.
 
-:predicate a owl:DatatypeProperty.
-  rdfs:domain :PathSegment.
-  rdfs:range xsd:anyURI.
+:alternativePath a owl:ObjectProperty;
+  rdfs:domain :AlternativePath.
+
+:zeroOrMorePath a owl:ObjectProperty;
+  rdfs:domain :ZeroOrMorePath;
+  rdfs:range :PropertyPath.
+
+:zeroOrOnePath a owl:ObjectProperty;
+  rdfs:domain :ZeroOrOnePath;
+  rdfs:range :PropertyPath.
+
+:oneOrMorePath a owl:ObjectProperty;
+  rdfs:domain :OneOrMorePath;
+  rdfs:range :PropertyPath.
 
 :shape a owl:ObjectProperty;
   rdfs:domain [
     a owl:Class;
     owl:unionOf (
       :ObjectProperty
+      :ComputedProperty
       :ShapeReference
     )
   ];
@@ -119,6 +147,14 @@
 
 :SetShape a owl:Class.
 :OptionalShape a owl:Class.
+
+:minCount a owl:DatatypeProperty;
+  rdfs:domain :SetShape;
+  rdfs:range xsd:integer.
+
+:maxCount a owl:DatatypeProperty;
+  rdfs:domain :SetShape;
+  rdfs:range xsd:integer.
 
 :item a owl:ObjectProperty;
   rdfs:domain [

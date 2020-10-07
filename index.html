@@ -2,9 +2,12 @@
 <html>
   <head>
     <meta charset='utf-8'>
+    <link href="./formatting.css" rel="stylesheet" />
+    <script src="./formatting.js"></script>
     <script src='https://www.w3.org/Tools/respec/respec-w3c' async class='remove'></script>
     <script class='remove'>
       var respecConfig = {
+        postProcess: [postProcessFormatting],
         specStatus: "unofficial",
         shortName: "ramp-shapes",
         subtitle: "RAMP shapes: declarative RDF ↔ algebraic data type mapping",
@@ -177,15 +180,35 @@
           ex:AnyIri a :ResourceShape;
             :onlyNamed true;
           </pre>
+          <table class="ramp-op-result">
+            <tr>
+              <td><pre class="ramp-dataset">&lt;http://example.com/alice&gt;</pre></td>
+              <td><pre class="json ramp-framed">"http://example.com/alice"</pre></td>
+            </tr>
+            <tr>
+              <td><pre class="ramp-dataset">_:bob</pre></td>
+              <td><span class="ramp-no-matches">no matches</span></td>
+            </tr>
+          </table>
         </aside>
         <aside class="example" title="Constant resource shape">
           <p>
-            This shape matches only <code>dcmit:Image</code> term:
+            This shape matches only <code>dctypes:Image</code> term:
           </p>
           <pre class="ttl">
           ex:ConstantIri a :ResourceShape;
-            :termValue dcmit:Image.
+            :termValue dctypes:Image.
           </pre>
+          <table class="ramp-op-result">
+            <tr>
+              <td><pre class="ramp-dataset">dctypes:Image</pre></td>
+              <td><pre class="json ramp-framed">"http://purl.org/dc/dcmitype/Image"</pre></td>
+            </tr>
+            <tr>
+              <td><pre class="ramp-dataset">dctypes:Sound</pre></td>
+              <td><span class="ramp-no-matches">no matches</span></td>
+            </tr>
+          </table>
         </aside>
         <section data-dfn-for="Vocabulary" data-link-for="Vocabulary">
           <h3><dfn>Vocabulary</dfn> interface</h3>
@@ -213,6 +236,20 @@
                   [ :vocabKey "text"; :termValue dctypes:Text ]
               ].
             </pre>
+            <table class="ramp-op-result">
+              <tr>
+                <td><pre class="ramp-dataset">dctypes:Image</pre></td>
+                <td><pre class="json ramp-framed">"image"</pre></td>
+              </tr>
+              <tr>
+                <td><pre class="ramp-dataset">dctypes:Sound</pre></td>
+                <td><pre class="json ramp-framed">"sound"</pre></td>
+              </tr>
+              <tr>
+                <td><pre class="ramp-dataset">sc:Manifest</pre></td>
+                <td><span class="ramp-match-error">error: no entry in vocabulary</span></td>
+              </tr>
+            </table>
           </aside>
         </section>
       </section>
@@ -240,6 +277,20 @@
           ex:PlainString a :LiteralShape;
             :termDatatype xsd:string.
           </pre>
+          <table class="ramp-op-result">
+            <tr>
+              <td><pre class="ramp-dataset">"Alice"</pre></td>
+              <td><pre class="json ramp-framed">"Alice"</pre></td>
+            </tr>
+            <tr>
+              <td><pre class="ramp-dataset">"Bob"^^xsd:string</pre></td>
+              <td><pre class="json ramp-framed">"Bob"</pre></td>
+            </tr>
+            <tr>
+              <td><pre class="ramp-dataset">"42"^^xsd:integer</pre></td>
+              <td><span class="ramp-no-matches">no matches: different datatype</span></td>
+            </tr>
+          </table>
         </aside>
         <aside class="example" title="Literal shape with language tag">
           <p>
@@ -250,6 +301,20 @@
           ex:EnLiteral a :LiteralShape;
             :termLanguage "en".
           </pre>
+          <table class="ramp-op-result">
+            <tr>
+              <td><pre class="ramp-dataset">"Alice"@en</pre></td>
+              <td><pre class="json ramp-framed">"Alice"</pre></td>
+            </tr>
+            <tr>
+              <td><pre class="ramp-dataset">"Bob"</pre></td>
+              <td><span class="ramp-no-matches">no matches: different datatype</span></td>
+            </tr>
+            <tr>
+              <td><pre class="ramp-dataset">"Carol"@fr</pre></td>
+              <td><span class="ramp-no-matches">no matches: different language tag</span></td>
+            </tr>
+          </table>
         </aside>
         <aside class="example" title="Constant literal shape">
           <p>
@@ -259,6 +324,16 @@
           ex:ConstantLiteral a :ResourceShape;
             :termValue "JPEG".
           </pre>
+          <table class="ramp-op-result">
+            <tr>
+              <td><pre class="ramp-dataset">"JPEG"</pre></td>
+              <td><pre class="json ramp-framed">"JPEG"</pre></td>
+            </tr>
+            <tr>
+              <td><pre class="ramp-dataset">"PNG"</pre></td>
+              <td><span class="ramp-no-matches">no matches: not equal to "JPEG"</span></td>
+            </tr>
+          </table>
         </aside>
       </section>
       <section data-dfn-for="ObjectShape" data-link-for="ObjectShape">
@@ -297,6 +372,21 @@
               :shape [ a :LiteralShape; :termDatatype xsd:integer ]
             ].
           </pre>
+          <table class="ramp-op-result">
+            <tr>
+              <td>
+                <pre class="ttl ramp-dataset">
+                _:p1 ex:xCoord 10;
+                  ex:yCoord 20.
+                </pre>
+              </td>
+              <td><pre class="json ramp-framed">{ "x": 10, "y": 20 }</pre></td>
+            </tr>
+            <tr>
+              <td><pre class="ttl ramp-dataset">_:p2 ex:xCoord 30.</pre></td>
+              <td><span class="ramp-no-matches">no matches: missing property "y"</span></td>
+            </tr>
+          </table>
         </aside>
         <aside class="example" title="Object shape with type property">
           <p>
@@ -319,6 +409,41 @@
               :shape [ a :LiteralShape; :termDatatype xsd:string ]
             ].
           </pre>
+          <table class="ramp-op-result">
+            <tr>
+              <td>
+                <pre class="ttl ramp-dataset">
+                _:note1 rdf:type ex:Note;
+                  ex:noteContent "Remember to buy milk".
+                </pre>
+              </td>
+              <td>
+                <pre class="json ramp-framed">
+                {
+                  "type": "http://example.com/shapes#Note",
+                  "text": "Remember to buy milk"
+                }
+                </pre>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <pre class="ttl ramp-dataset">
+                _:note1 ex:noteContent "Remember to buy bread".
+                </pre>
+              </td>
+              <td><span class="ramp-no-matches">no matches: missing property "type"</span></td>
+            </tr>
+            <tr>
+              <td>
+                <pre class="ttl ramp-dataset">
+                _:note1 rdf:type ex:Note;
+                  ex:noteContent "Remember to buy eggs".
+                </pre>
+              </td>
+              <td><span class="ramp-no-matches">no matches: missing property "text"</span></td>
+            </tr>
+          </table>
         </aside>
         <section data-dfn-for="ObjectProperty" data-link-for="ObjectProperty">
           <h3><dfn>ObjectProperty</dfn> interface</h3>
@@ -358,6 +483,19 @@
                 :shape [ a :LiteralShape; :termDatatype xsd:string ]
               ].
             </pre>
+            <table class="ramp-op-result">
+              <tr>
+                <td><pre class="ttl ramp-dataset">&lt;http://example.com/alice&gt; rdfs:label "Alice".</pre></td>
+                <td>
+                  <pre class="json ramp-framed">
+                  {
+                    "iri": "http://example.com/alice",
+                    "label": "Alice"
+                  }
+                  </pre>
+                </td>
+              </tr>
+            </table>
             <p>
               For other kinds of property paths see <a>PropertyPath</a>.
             </p>
@@ -384,6 +522,17 @@
                 :shape [ a :LiteralShape; :termDatatype xsd:string ]
               ].
             </pre>
+            <table class="ramp-op-result">
+              <tr>
+                <td>
+                  <pre class="ttl ramp-dataset">
+                  _:manifest1 rdf:type sc:Manifest;
+                    rdfs:label "Paintings".
+                  </pre>
+                </td>
+                <td><pre class="json ramp-framed">{ "label": "Paintings" }</pre></td>
+              </tr>
+            </table>
           </aside>
         </section>
       </section>
@@ -408,12 +557,26 @@
             or <code>xsd:boolean</code> terms:
           </p>
           <pre class="ttl">
-          ex:IntegerOrString a :UnionShape;
+          ex:SimpleLiteral a :UnionShape;
             :variant
               [ a :LiteralShape; :termDatatype xsd:integer ],
               [ a :LiteralShape; :termDatatype xsd:string ],
               [ a :LiteralShape; :termDatatype xsd:boolean ].
           </pre>
+          <table class="ramp-op-result">
+            <tr>
+              <td><pre class="ramp-dataset">"42"^^xsd:integer</pre></td>
+              <td><pre class="json ramp-framed">42</pre></td>
+            </tr>
+            <tr>
+              <td><pre class="ramp-dataset">"true"^^xsd:boolean</pre></td>
+              <td><pre class="json ramp-framed">true</pre></td>
+            </tr>
+            <tr>
+              <td><pre class="ramp-dataset">"3.14"^^xsd:double</pre></td>
+              <td><span class="ramp-no-matches">no matches</span></td>
+            </tr>
+          </table>
         </aside>
         <aside class="example" title="Union of literal and RDF list">
           <p>
@@ -425,6 +588,24 @@
               [ a :LiteralShape; :termDatatype xsd:string ],
               [ a :ListShape; :item [ a :LiteralShape; :termDatatype xsd:string ] ].
           </pre>
+          <table class="ramp-op-result">
+            <tr>
+              <td><pre class="ramp-dataset">"Alice"</pre></td>
+              <td><pre class="json ramp-framed">"Alice"</pre></td>
+            </tr>
+            <tr>
+              <td><pre class="ramp-dataset">("Alice" "Bob" "Carol")</pre></td>
+              <td><pre class="json ramp-framed">["Alice", "Bob", "Carol"]</pre></td>
+            </tr>
+            <tr>
+              <td><pre class="ramp-dataset">(1 2 3)</pre></td>
+              <td>
+                <span class="ramp-no-matches">
+                  no matches: different datatype for list item <code>xsd:integer</code>
+                </span>
+              </td>
+            </tr>
+          </table>
         </aside>
       </section>
       <section data-dfn-for="OptionalShape" data-link-for="OptionalShape">
@@ -459,6 +640,16 @@
           ex:MaybeString a :OptionalShape;
             :item [ :LiteralShape; :termDatatype xsd:string ].
           </pre>
+          <table class="ramp-op-result">
+            <tr>
+              <td><pre class="ramp-dataset">"Bob"</pre></td>
+              <td><pre class="json ramp-framed">"Bob"</pre></td>
+            </tr>
+            <tr>
+              <td><span class="ramp-empty-dataset">empty dataset</span></td>
+              <td><pre class="json ramp-framed">null</pre></td>
+            </tr>
+          </table>
         </aside>
         <aside class="example" title="Optional object property">
           <p>
@@ -480,6 +671,28 @@
               ]
             ].
           </pre>
+          <table class="ramp-op-result">
+            <tr>
+              <td>
+                <pre class="ttl ramp-dataset">
+                _:loc1 rdf:type ex:Location;
+                  rdfs:label "Paris".
+                </pre>
+              </td>
+              <td>
+                <pre class="json ramp-framed">
+                {
+                  "type": "http://example.com/shapes#Location",
+                  "label": "Paris"
+                }
+                </pre>
+              </td>
+            </tr>
+            <tr>
+              <td><pre class="ttl ramp-dataset">_:loc2 rdf:type ex:Location.</pre></td>
+              <td><pre class="json ramp-framed">{ "type": "http://example.com/shapes#Location" }</pre></td>
+            </tr>
+          </table>
         </aside>
       </section>
       <section data-dfn-for="SetShape" data-link-for="SetShape">
@@ -509,6 +722,24 @@
           ex:IntegerSet a :SetShape;
             :item [ a :LiteralShape; :termDatatype xsd:integer ].
           </pre>
+          <table class="ramp-op-result">
+            <tr>
+              <td><pre class="ramp-dataset">1, 2, -3, 4</pre></td>
+              <td><pre class="json ramp-framed">[1, 2, -3, 4]</pre></td>
+            </tr>
+            <tr>
+              <td><span class="ramp-empty-dataset">empty dataset</span></td>
+              <td><pre class="json ramp-framed">[]</pre></td>
+            </tr>
+            <tr>
+              <td><pre class="ramp-dataset">10, "carol", 20</pre></td>
+              <td>
+                <span class="ramp-no-matches">
+                  no matches: different datatype for item <code>xsd:string</code>
+                </span>
+              </td>
+            </tr>
+          </table>
         </aside>
         <aside class="example" title="Set cardinality restrictions">
           <p>
@@ -520,6 +751,20 @@
             :minCount 1;
             :maxCount 3.
           </pre>
+          <table class="ramp-op-result">
+            <tr>
+              <td><pre class="ramp-dataset">"alice", "bob", "carol"</pre></td>
+              <td><pre class="json ramp-framed">["alice", "bob", "carol"]</pre></td>
+            </tr>
+            <tr>
+              <td><span class="ramp-empty-dataset">empty dataset</span></td>
+              <td><span class="ramp-no-matches">no matches: should be at least one item</span></td>
+            </tr>
+            <tr>
+              <td><pre class="ramp-dataset">"a", "b", "c", "d"</pre></td>
+              <td><span class="ramp-no-matches">no matches: too many items</span></td>
+            </tr>
+          </table>
         </aside>
         <aside class="example" title="Object property with multiple values">
           <p>
@@ -536,6 +781,24 @@
               ]
             ].
           </pre>
+          <table class="ramp-op-result">
+            <tr>
+              <td><pre class="ttl ramp-dataset">_:result ex:winningNumber 10, 20, 30.</pre></td>
+              <td><pre class="json ramp-framed">{ "winningNumbers": [10, 20, 30] }</pre></td>
+            </tr>
+            <tr>
+              <td><pre class="ttl ramp-dataset">_:result rdfs:label "Lottery Result".</pre></td>
+              <td><pre class="json ramp-framed">{ "winningNumbers": [] }</pre></td>
+            </tr>
+            <tr>
+              <td><pre class="ttl ramp-dataset">_:result ex:winningNumber 10, "alice".</pre></td>
+              <td>
+                <span class="ramp-no-matches">
+                  no matches: different datatype for item <code>xsd:string</code>
+                </span>
+              </td>
+            </tr>
+          </table>
         </aside>
       </section>
       <section data-dfn-for="ListShape" data-link-for="ListShape">
@@ -571,6 +834,40 @@
           ex:IntegerList a :ListShape;
             :item [ a :LiteralShape; :termDatatype xsd:integer ].
           </pre>
+          <table class="ramp-op-result">
+            <tr>
+              <td><pre class="ramp-dataset">(2 4 8 10)</pre></td>
+              <td><pre class="json ramp-framed">[2, 4, 8, 10]</pre></td>
+            </tr>
+            <tr>
+              <td><pre class="ttl ramp-dataset">()</pre></td>
+              <td><pre class="json ramp-framed">[]</pre></td>
+            </tr>
+            <tr>
+              <td><pre class="ttl ramp-dataset">(1 2 "carol")</pre></td>
+              <td>
+                <span class="ramp-no-matches">
+                  no matches: different datatype for item <code>xsd:string</code>
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="ramp-empty-dataset">empty dataset</span></td>
+              <td>
+                <span class="ramp-no-matches">
+                  no matches: cannot find list head <code>rdf:first</code>
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td><pre class="ttl ramp-dataset">_:item1 rdf:first 42.</pre></td>
+              <td>
+                <span class="ramp-no-matches">
+                  no matches: cannot find list tail <code>rdf:rest</code>
+                </span>
+              </td>
+            </tr>
+          </table>
         </aside>
       </section>
       <section data-dfn-for="MapShape" data-link-for="MapShape">
@@ -625,6 +922,33 @@
               [ a :LiteralShape; :termDatatype xsd:integer ],
               [ a :LiteralShape; :termDatatype xsd:boolean ].
           </pre>
+          <table class="ramp-op-result">
+            <tr>
+              <td>
+                <pre class="ttl ramp-dataset">
+                  _:item1 ex:propertyName "homeDirectory";
+                    ex:propertyValue "/home/alice".
+                  _:item2 ex:propertyName "maxHistoryLength";
+                    ex:propertyValue 20.
+                  _:item3 ex:propertyName "disableNotifications";
+                    ex:propertyValue true.
+                </pre>
+              </td>
+              <td>
+                <pre class="json ramp-framed">
+                  {
+                    "homeDirectory": "/home/alice",
+                    "maxHistoryLength": 20,
+                    "disableNotifications": true
+                  }
+                </pre>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="ramp-empty-dataset">empty dataset</span></td>
+              <td><pre class="json ramp-framed">{}</pre></td>
+            </tr>
+          </table>
         </aside>
         <section data-dfn-for="ShapeReference" data-link-for="ShapeReference">
           <h3><dfn>ShapeReference</dfn> interface</h3>
@@ -656,6 +980,36 @@
             _:labelLiteral a :LiteralShape;
               :termDatatype rdf:langString.
             </pre>
+            <table class="ramp-op-result">
+              <tr>
+                <td>
+                  <pre class="ramp-dataset">
+                    "Apple"@en,
+                    "Apfel"@de,
+                    "Pomme"@fr,
+                    "Яблоко"@ru
+                  </pre>
+                </td>
+                <td>
+                  <pre class="json ramp-framed">
+                    {
+                      "en": "Apple",
+                      "de": "Apfel",
+                      "fr": "Pomme",
+                      "ru": "Яблоко"
+                    }
+                  </pre>
+                </td>
+              </tr>
+              <tr>
+                <td><pre class="ramp-dataset">"Apple", "Pomme"@fr</pre></td>
+                <td>
+                  <span class="ramp-no-matches">
+                    no matches: no language tag for <code>"Apple"</code> literal
+                  </span>
+                </td>
+              </tr>
+            </table>
           </aside>
         </section>
       </section>
@@ -881,7 +1235,7 @@
           where each one is an instance of <a>shape</a>.
         </p>
         <section>
-          <h4>Frame matching mode</h4>
+          <h3>Frame matching mode</h3>
           <p>
             The matching for each shape may operate in either <code>strict</code> or
             <code>lenient</code> mode. The mode initializes as <code>lenient</code> and propagates
@@ -917,6 +1271,121 @@
             unknown toRdf(unknown value, Shape shape);
           };
           </pre>
+        </section>
+        <section>
+          <h3>Framing algorithm</h3>
+          <p class="note">This section is a work-in-progress</p>
+          <p>Define type <dfn>FrameCandidates</dfn> to be <a>sequence</a>&lt;<a>Term</a>&gt;.</p>
+          <p>Define structure <dfn>FrameMismatch</dfn> ().</p>
+          <p>Define structure <dfn>FrameCyclic</dfn> ().</p>
+          <p>Define structure <dfn>FrameMatch</dfn>(
+            <a>unknown</a> value, (<a>FrameCandidates</a> or <a>null</a>) candidate).</p>
+          <div class="algorithm">
+            <p>
+              To determine the result of framing a <a>Dataset</a> <var>graph</var> into
+              <a>Shape</a> <var>rootShape</var> in matching mode <a>boolean</a> <var>rootStrict</var>,
+              the following algorithm is applied:
+            </p>
+            <ol>
+              <li>
+                <p>Let <var>rootCandidates</var> be a set of all <a>NamedNode</a>
+                and <a>BlankNode</a> terms from <var>graph</var></p>
+              </li>
+              <li>
+                <p>For <var>M</var> of <a href="#alg-frame">FrameShape</a>(
+                  <var>rootShape</var>, <var>rootCandidates</var>, <var>rootStrict</var>)
+                  match <var>M</var>:</p>
+                <ul>
+                  <li>
+                    <p>On <a>FrameMismatch</a> continue the iteration.</p>
+                  </li>
+                  <li>
+                    <p>On <a>FrameCyclic</a> throw <a>Errors.CyclicMatch</a> error.<p>
+                  </li>
+                  <li>
+                    <p>On <a>FrameMatch</a>(<var>value</var>, _) yield <var>value</var>.</p>
+                  </li>
+                </ul>
+              </li>
+            </ol>
+            <p><dfn id="alg-frame">Frame(
+              <a>Shape</a> <var>shape</var>,
+              <a>FrameCandidates</a> <var>candidates</var>,
+              <a>boolean</a> <var>strict</var>
+              )</dfn>:</p>
+            <ol>
+              <li>
+                <p>Let <var>required</var> be <var>strict</var> unless
+                  <var>shape</var> is <a data-lt='ShapeBase.lenient'>lenient</a>.</p>
+              </li>
+              <li>
+                <p>For <var>M</var> of Frame<sub><var>S</var></sub>(
+                  <var>shape</var>, <var>candidates</var>, <var>required</var>)
+                  where <var>S</var> is a type of <var>shape</var>,
+                  match <var>M</var>:</p>
+                <ul>
+                  <li>
+                    <p>On <a>FrameMismatch</a>:</p>
+                    <p>If <var>shape</var> is <a data-lt='ShapeBase.lenient'>lenient</a>
+                      then yield <a>FrameMismatch</a>
+                      else throw <a>Errors.ShapeMismatch</a> error.</p>
+                  </li>
+                  <li>
+                    <p>On <a>FrameCyclic</a> yield <var>M</var>.<p>
+                  </li>
+                  <li>
+                    <p>On <a>FrameMatch</a> yield <var>M</var>.</p>
+                  </li>
+                </ul>
+              </li>
+            </ol>
+            <p><dfn id="alg-frame-resource-or-literal">Frame
+              <sub>(<a>ResourceShape</a> or <a>LiteralShape</a>)</sub>(
+              <var>shape</var>, <var>candidates</var>, <var>strict</var>)</dfn>:</p>
+            <ol>
+              <li>
+                <p>For <var>candidate</var> of <var>candidates</var>:</p>
+                <ol>
+                  <li>
+                    <p>If <var>shape</var> matches term <var>candidate</var>:</p>
+                    <p class="ramp-todo">TODO</p>
+                  </li>
+                </ol>
+              </li>
+            </ol>
+            <p><dfn id="alg-frame-object">Frame
+              <sub><a>ObjectShape</a></sub>(
+              <var>shape</var>, <var>candidates</var>, <var>strict</var>)</dfn>:</p>
+            <p class="ramp-todo">TODO</p>
+            <p><dfn id="alg-frame-union">Frame
+              <sub><a>UnionShape</a></sub>(
+              <var>shape</var>, <var>candidates</var>, <var>strict</var>)</dfn>:</p>
+            <p class="ramp-todo">TODO</p>
+            <ol>
+              <li><p>Let <var>unmatched</var> be an empty set</p></li>
+              <li>
+                <p>Add each <var>candidate</var> from <var>candidates</var>
+                  to <var>unmatched</var></p>
+                <p class="ramp-todo">TODO</p>
+              </li>
+            </ol>
+            <p><dfn id="alg-frame-optional">Frame
+              <sub><a>OptionalShape</a></sub>(
+              <var>shape</var>, <var>candidates</var>, <var>strict</var>)</dfn>:</p>
+            <p class="ramp-todo">TODO</p>
+            <p><dfn id="alg-frame-set">Frame
+              <sub><a>SetShape</a></sub>(
+              <var>shape</var>, <var>candidates</var>, <var>strict</var>)</dfn>:</p>
+            <p class="ramp-todo">TODO</p>
+            <p><dfn id="alg-frame-list">Frame
+              <sub><a>ListShape</a></sub>(
+              <var>shape</var>, <var>candidates</var>, <var>strict</var>)</dfn>:</p>
+            <p class="ramp-todo">TODO</p>
+            <p><dfn id="alg-frame-map">Frame
+              <sub><a>MapShape</a></sub>(
+              <var>shape</var>, <var>candidates</var>, <var>strict</var>)</dfn>:</p>
+            <p class="ramp-todo">TODO</p>
+          </div>
         </section>
       </section>
       <section data-dfn-for="FlattenParams" data-link-for="FlattenParams">
@@ -959,6 +1428,20 @@
           <a data-cite='sparql11-query#syntaxTerms'>graph terms</a>.
         </p>
       </section>
+      <section data-dfn-for="Errors" data-link-for="Errors">
+        <h3><dfn>Errors</dfn></h3>
+        <p>
+          <dfn data-lt="Errors.CyclicMatch">CyclicMatch</dfn>,
+          <dfn data-lt="Errors.ShapeMismatch">ShapeMismatch</dfn>.
+        </p>
+      </section>
+    </section>
+    <section class="appendix">
+      <h2>Shapes for RAMP shapes</h2>
+      <p>
+        RAMP shape definitions for this specification can be found here:
+        <a href='./schema.ramp.ttl'>schema.ramp.ttl</a>.
+      </p>
     </section>
   </body>
 </html>
