@@ -2,199 +2,199 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
-@prefix : <http://ramp-shapes.github.io/schema#>.
+@prefix ramp: <http://ramp-shapes.github.io/schema#>.
 
-: a owl:Ontology;
+ramp: a owl:Ontology;
   rdfs:label "RAMP Shapes Schema".
 
-:Shape a owl:Class;
+ramp:Shape a owl:Class;
   owl:unionOf (
-    :ResourceShape
-    :LiteralShape
-    :ObjectShape
-    :UnionShape
-    :SetShape
-    :OptionalShape
-    :ListShape
-    :MapShape
+    ramp:Resource
+    ramp:Literal
+    ramp:Record
+    ramp:AnyOf
+    ramp:Set
+    ramp:Optional
+    ramp:List
+    ramp:Map
   ).
 
-:lenient a owl:DatatypeProperty;
-  rdfs:domain :Shape;
+ramp:lenient a owl:DatatypeProperty;
+  rdfs:domain ramp:Shape;
   rdfs:range xsd:boolean.
 
-:ResourceShape a owl:Class.
-:LiteralShape a owl:Class.
+ramp:Resource a owl:Class.
+ramp:Literal a owl:Class.
 
-:vocabulary a owl:ObjectProperty;
-  rdfs:range :Vocabulary.
+ramp:vocabulary a owl:ObjectProperty;
+  rdfs:range ramp:Vocabulary.
 
-:termDatatype a owl:DatatypeProperty;
-  rdfs:domain :LiteralShape;
+ramp:termDatatype a owl:DatatypeProperty;
+  rdfs:domain ramp:Literal;
   rdfs:range xsd:anyURI.
 
-:termLanguage: a owl:DatatypeProperty;
-  rdfs:domain :LiteralShape;
+ramp:termLanguage: a owl:DatatypeProperty;
+  rdfs:domain ramp:Literal;
   rdfs:range xsd:string.
 
-:termValue a owl:DatatypeProperty;
+ramp:termValue a owl:DatatypeProperty;
   rdfs:domain [
     a owl:Class;
     owl:unionOf (
-      :ResourceShape
-      :LiteralShape
+      ramp:Resource
+      ramp:Literal
     )
   ].
 
-:keepAsTerm a owl:DatatypeProperty;
+ramp:keepAsTerm a owl:DatatypeProperty;
   rdfs:domain [
     a owl:Class;
     owl:unionOf (
-      :ResourceShape
-      :LiteralShape
+      ramp:Resource
+      ramp:Literal
     )
   ];
   rdfs:range xsd:boolean.
 
-:Vocabulary a owl:Class.
+ramp:Vocabulary a owl:Class.
 
-:vocabItem a owl:ObjectProperty;
-  rdfs:domain :Vocabulary.
+ramp:vocabItem a owl:ObjectProperty;
+  rdfs:domain ramp:Vocabulary.
 
-:vocabKey a owl:DatatypeProperty;
+ramp:vocabKey a owl:DatatypeProperty;
   rdfs:range xsd:string.
 
-:ObjectShape a owl:Class.
+ramp:Record a owl:Class.
 
-:typeProperty a owl:ObjectProperty;
-  rdfs:domain :ObjectShape;
-  rdfs:range :ObjectProperty.
+ramp:typeProperty a owl:ObjectProperty;
+  rdfs:domain ramp:Record;
+  rdfs:range ramp:Property.
 
-:property a owl:ObjectProperty;
-  rdfs:domain :ObjectShape;
-  rdfs:range :ObjectProperty.
+ramp:property a owl:ObjectProperty;
+  rdfs:domain ramp:Record;
+  rdfs:range ramp:Property.
 
-:computedProperty a owl:ObjectProperty;
-  rdfs:domain :ObjectShape;
-  rdfs:range :ComputedProperty.
+ramp:computedProperty a owl:ObjectProperty;
+  rdfs:domain ramp:Record;
+  rdfs:range ramp:ComputedProperty.
 
-:ObjectProperty a owl:Class.
-:ComputedProperty a owl:Class.
+ramp:Property a owl:Class.
+ramp:ComputedProperty a owl:Class.
 
-:name a owl:DatatypeProperty;
+ramp:name a owl:DatatypeProperty;
   rdfs:domain [
     a owl:Class;
-    owl:unionOf (:ObjectProperty :ComputedProperty)
+    owl:unionOf (:ObjectProperty ramp:ComputedProperty)
   ];
   rdfs:range xsd:string.
 
-:path a owl:ObjectProperty;
-  rdfs:range :PropertyPath.
+ramp:path a owl:ObjectProperty;
+  rdfs:range ramp:PropertyPath.
 
-:PropertyPath a owl:Class;
+ramp:PropertyPath a owl:Class;
   owl:unionOf (
     xsd:anyURI
-    :SequencePath
-    :InversePath
-    :AlternativePath
-    :ZeroOrMorePath
-    :ZeroOrOnePath
-    :OneOrMorePath
+    ramp:SequencePath
+    ramp:InversePath
+    ramp:AlternativePath
+    ramp:ZeroOrMorePath
+    ramp:ZeroOrOnePath
+    ramp:OneOrMorePath
   ).
 
-:SequencePath a owl:Class.
-:InversePath a owl:Class.
-:AlternativePath a owl:Class.
-:ZeroOrMorePath a owl:Class.
-:ZeroOrOnePath a owl:Class.
-:OneOrMorePath a owl:Class.
+ramp:SequencePath a owl:Class.
+ramp:InversePath a owl:Class.
+ramp:AlternativePath a owl:Class.
+ramp:ZeroOrMorePath a owl:Class.
+ramp:ZeroOrOnePath a owl:Class.
+ramp:OneOrMorePath a owl:Class.
 
-:inversePath a owl:ObjectProperty;
-  rdfs:domain :InversePath;
-  rdfs:range :PropertyPath.
+ramp:inversePath a owl:ObjectProperty;
+  rdfs:domain ramp:InversePath;
+  rdfs:range ramp:PropertyPath.
 
-:alternativePath a owl:ObjectProperty;
-  rdfs:domain :AlternativePath.
+ramp:alternativePath a owl:ObjectProperty;
+  rdfs:domain ramp:AlternativePath.
 
-:zeroOrMorePath a owl:ObjectProperty;
-  rdfs:domain :ZeroOrMorePath;
-  rdfs:range :PropertyPath.
+ramp:zeroOrMorePath a owl:ObjectProperty;
+  rdfs:domain ramp:ZeroOrMorePath;
+  rdfs:range ramp:PropertyPath.
 
-:zeroOrOnePath a owl:ObjectProperty;
-  rdfs:domain :ZeroOrOnePath;
-  rdfs:range :PropertyPath.
+ramp:zeroOrOnePath a owl:ObjectProperty;
+  rdfs:domain ramp:ZeroOrOnePath;
+  rdfs:range ramp:PropertyPath.
 
-:oneOrMorePath a owl:ObjectProperty;
-  rdfs:domain :OneOrMorePath;
-  rdfs:range :PropertyPath.
+ramp:oneOrMorePath a owl:ObjectProperty;
+  rdfs:domain ramp:OneOrMorePath;
+  rdfs:range ramp:PropertyPath.
 
-:shape a owl:ObjectProperty;
+ramp:shape a owl:ObjectProperty;
   rdfs:domain [
     a owl:Class;
     owl:unionOf (
-      :ObjectProperty
-      :ComputedProperty
-      :ShapeReference
+      ramp:Property
+      ramp:ComputedProperty
+      ramp:ShapeReference
     )
   ];
-  rdfs:range :Shape.
+  rdfs:range ramp:Shape.
 
-:UnionShape a owl:Class.
+ramp:AnyOf a owl:Class.
 
-:variant a owl:ObjectProperty;
-  rdfs:domain :UnionShape;
-  rdfs:range :Shape.
+ramp:variant a owl:ObjectProperty;
+  rdfs:domain ramp:AnyOf;
+  rdfs:range ramp:Shape.
 
-:SetShape a owl:Class.
-:OptionalShape a owl:Class.
+ramp:Set a owl:Class.
+ramp:Optional a owl:Class.
 
-:minCount a owl:DatatypeProperty;
-  rdfs:domain :SetShape;
+ramp:minCount a owl:DatatypeProperty;
+  rdfs:domain ramp:Set;
   rdfs:range xsd:integer.
 
-:maxCount a owl:DatatypeProperty;
-  rdfs:domain :SetShape;
+ramp:maxCount a owl:DatatypeProperty;
+  rdfs:domain ramp:Set;
   rdfs:range xsd:integer.
 
-:item a owl:ObjectProperty;
+ramp:item a owl:ObjectProperty;
   rdfs:domain [
     a owl:Class;
     owl:unionOf (
-      :SetShape
-      :OptionalShape
-      :ListShape
-      :MapShape
+      ramp:Set
+      ramp:Optional
+      ramp:List
+      ramp:Map
     )
   ];
-  rdfs:range :Shape.
+  rdfs:range ramp:Shape.
 
-:ListShape a owl:Class.
+ramp:List a owl:Class.
 
-:headPath a owl:ObjectProperty;
-  rdfs:domain :ListShape;
-  rdfs:range :PathSequence.
+ramp:headPath a owl:ObjectProperty;
+  rdfs:domain ramp:List;
+  rdfs:range ramp:PathSequence.
 
-:tailPath a owl:ObjectProperty;
-  rdfs:domain :ListShape;
-  rdfs:range :PathSequence.
+ramp:tailPath a owl:ObjectProperty;
+  rdfs:domain ramp:List;
+  rdfs:range ramp:PathSequence.
 
-:nil a owl:ObjectProperty;
-  rdfs:domain :ListShape.
+ramp:nil a owl:ObjectProperty;
+  rdfs:domain ramp:List.
 
-:MapShape a owl:Class.
+ramp:Map a owl:Class.
 
-:mapKey a owl:ObjectProperty;
-  rdfs:domain :MapShape;
-  rdfs:range :ShapeReference.
+ramp:mapKey a owl:ObjectProperty;
+  rdfs:domain ramp:Map;
+  rdfs:range ramp:ShapeReference.
 
-:mapValue a owl:ObjectProperty;
-  rdfs:domain :MapShape;
-  rdfs:range :ShapeReference.
+ramp:mapValue a owl:ObjectProperty;
+  rdfs:domain ramp:Map;
+  rdfs:range ramp:ShapeReference.
 
-:ShapeReference a owl:Class.
+ramp:ShapeReference a owl:Class.
 
-:termPart a owl:DatatypeProperty;
+ramp:termPart a owl:DatatypeProperty;
   rdfs:range [
     a owl:DataRange;
-    owl:oneOf (:TermValue :TermDatatype :TermLanguage)
+    owl:oneOf (:TermValue ramp:TermDatatype ramp:TermLanguage)
   ].

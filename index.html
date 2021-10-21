@@ -71,6 +71,7 @@
           https://github.com/ramp-shapes/ramp-shapes.github.io
         </a>.
       </p>
+      <p class="note">This draft is implemented by <code>ram-shapes@0.10.0</code> NPM package.</p>
     </section>
     <section>
       <h2>External definitions</h2>
@@ -112,7 +113,7 @@
           @prefix owl: &lt;http://www.w3.org/2002/07/owl#&gt;.
           @prefix dctypes: &lt;http://purl.org/dc/dcmitype/&gt;.
           @prefix sc: &lt;http://iiif.io/api/presentation/2#&gt;.
-          @prefix : &lt;http://ramp-shapes.github.io/schema#&gt;.
+          @prefix ramp: &lt;http://ramp-shapes.github.io/schema#&gt;.
           @prefix ex: &lt;http://example.com/shapes#&gt;.
         </pre>
       </p>
@@ -124,8 +125,8 @@
       typedef (
         ResourceShape
         or LiteralShape
-        or ObjectShape
-        or UnionShape
+        or RecordShape
+        or AnyOfShape
         or OptionalShape
         or SetShape
         or ListShape
@@ -177,8 +178,8 @@
             but not blank nodes:
           </p>
           <pre class="ttl">
-          ex:AnyIri a :ResourceShape;
-            :onlyNamed true;
+          ex:AnyIri a ramp:Resource;
+            ramp:onlyNamed true;
           </pre>
           <table class="ramp-op-result">
             <tr>
@@ -196,8 +197,8 @@
             This shape matches only <code>dctypes:Image</code> term:
           </p>
           <pre class="ttl">
-          ex:ConstantIri a :ResourceShape;
-            :termValue dctypes:Image.
+          ex:ConstantIri a ramp:Resource;
+            ramp:termValue dctypes:Image.
           </pre>
           <table class="ramp-op-result">
             <tr>
@@ -228,12 +229,12 @@
               key, e.g. <code>dctypes:Sound</code> IRI will be framed as <code>"sound"</code> string:
             </p>
             <pre class="ttl">
-            ex:ResourceType a :ResourceShape;
-              :vocabulary [
-                :vocabItem
-                  [ :vocabKey "sound"; :termValue dctypes:Sound ],
-                  [ :vocabKey "image"; :termValue dctypes:Image ],
-                  [ :vocabKey "text"; :termValue dctypes:Text ]
+            ex:ResourceType a ramp:Resource;
+              ramp:vocabulary [
+                ramp:vocabItem
+                  [ ramp:vocabKey "sound"; ramp:termValue dctypes:Sound ],
+                  [ ramp:vocabKey "image"; ramp:termValue dctypes:Image ],
+                  [ ramp:vocabKey "text"; ramp:termValue dctypes:Text ]
               ].
             </pre>
             <table class="ramp-op-result">
@@ -274,8 +275,8 @@
             This shape matches only <code>xsd:string</code> literals:
           </p>
           <pre class="ttl">
-          ex:PlainString a :LiteralShape;
-            :termDatatype xsd:string.
+          ex:PlainString a ramp:Literal;
+            ramp:termDatatype xsd:string.
           </pre>
           <table class="ramp-op-result">
             <tr>
@@ -298,8 +299,8 @@
             <code>"en"</code> language tag:
           </p>
           <pre class="ttl">
-          ex:EnLiteral a :LiteralShape;
-            :termLanguage "en".
+          ex:EnLiteral a ramp:Literal;
+            ramp:termLanguage "en".
           </pre>
           <table class="ramp-op-result">
             <tr>
@@ -321,8 +322,8 @@
             This shape matches only <code>"JPEG"</code> literals:
           </p>
           <pre class="ttl">
-          ex:ConstantLiteral a :ResourceShape;
-            :termValue "JPEG".
+          ex:ConstantLiteral a ramp:Resource;
+            ramp:termValue "JPEG".
           </pre>
           <table class="ramp-op-result">
             <tr>
@@ -336,40 +337,40 @@
           </table>
         </aside>
       </section>
-      <section data-dfn-for="ObjectShape" data-link-for="ObjectShape">
-        <h3><dfn>ObjectShape</dfn> type</h3>
+      <section data-dfn-for="RecordShape" data-link-for="RecordShape">
+        <h3><dfn>RecordShape</dfn> type</h3>
         <p>
-          <a>ObjectShape</a> describes a product type of heterogeneous types accessible through
+          <a>RecordShape</a> describes a product type of heterogeneous types accessible through
           named properties. Both <dfn>typeProperties</dfn> and <dfn>properties</dfn> define
           properties for a shape and the difference is when a candidate term must match given
-          object shape if and only if all <a>typeProperties</a> matches, which allows to produce
+          record shape if and only if all <a>typeProperties</a> matches, which allows to produce
           better diagnostic reports if <a>typeProperties</a> match but some of the
           <a>properties</a> does not.
         </p>
         <pre class="idl">
-        [Exposed] interface ObjectShape : ShapeBase {
-          /** type == "object" */
+        [Exposed] interface RecordShape : ShapeBase {
+          /** type == "record" */
           readonly attribute string type;
-          getter sequence&lt;ObjectProperty&gt; typeProperties();
-          getter sequence&lt;ObjectProperty&gt; properties();
+          getter sequence&lt;Property&gt; typeProperties();
+          getter sequence&lt;Property&gt; properties();
         };
         </pre>
-        <aside class="example" title="Simple object shape">
+        <aside class="example" title="Simple record shape">
           <p>
             This shape matches IRI or blank term with two edges <code>ex:xCoord</code> and
             <code>ex:yCoord</code> and frames it into object <code>{ x: number; y: number }</code>:
           </p>
           <pre class="ttl">
-          ex:PointShape a :ObjectShape;
-            :property [
-              :name "x";
-              :path ex:xCoord;
-              :shape [ a :LiteralShape; :termDatatype xsd:integer ]
+          ex:PointShape a ramp:Record;
+            ramp:property [
+              ramp:name "x";
+              ramp:path ex:xCoord;
+              ramp:shape [ a ramp:Literal; ramp:termDatatype xsd:integer ]
             ].
-            :property [
-              :name "y";
-              :path ex:yCoord;
-              :shape [ a :LiteralShape; :termDatatype xsd:integer ]
+            ramp:property [
+              ramp:name "y";
+              ramp:path ex:yCoord;
+              ramp:shape [ a ramp:Literal; ramp:termDatatype xsd:integer ]
             ].
           </pre>
           <table class="ramp-op-result">
@@ -388,7 +389,7 @@
             </tr>
           </table>
         </aside>
-        <aside class="example" title="Object shape with type property">
+        <aside class="example" title="Record shape with type property">
           <p>
             This shape matches IRI or blank term with <code>rdf:type</code> equal to <code>ex:Note</code>
             and <code>ex:noteContent</code> string. If <code>ex:noteContent</code> is missing or
@@ -397,16 +398,16 @@
             whole <code>ex:NoteShape</code>.
           </p>
           <pre class="ttl">
-          ex:NoteShape a :ObjectShape;
-            :typeProperty [
-              :name "type";
-              :path rdf:type;
-              :shape [ a :ResourceShape; :termValue ex:Note ]
+          ex:NoteShape a ramp:Record;
+            ramp:typeProperty [
+              ramp:name "type";
+              ramp:path rdf:type;
+              ramp:shape [ a ramp:Resource; ramp:termValue ex:Note ]
             ];
-            :property [
-              :name "text";
-              :path ex:noteContent;
-              :shape [ a :LiteralShape; :termDatatype xsd:string ]
+            ramp:property [
+              ramp:name "text";
+              ramp:path ex:noteContent;
+              ramp:shape [ a ramp:Literal; ramp:termDatatype xsd:string ]
             ].
           </pre>
           <table class="ramp-op-result">
@@ -445,10 +446,10 @@
             </tr>
           </table>
         </aside>
-        <section data-dfn-for="ObjectProperty" data-link-for="ObjectProperty">
-          <h3><dfn>ObjectProperty</dfn> interface</h3>
+        <section data-dfn-for="Property" data-link-for="Property">
+          <h3><dfn>Property</dfn> interface</h3>
           <p>
-            <a>ObjectProperty</a> describes a named property in a record type.
+            <a>Property</a> describes a named property in a record type.
             It is specified by its <dfn>name</dfn> string, <dfn data-lt="path">property path</dfn> and
             <dfn data-lt="valueShape">value shape</dfn>. A property with zero-length path allows to embed
             a different representation of the same subject, e.g. the subject IRI itself.
@@ -459,7 +460,7 @@
             the value for <a>valueShape</a> will be synthesized or an error will be thrown if it is not possible.
           </p>
           <pre class="idl">
-          [Exposed] interface ObjectProperty {
+          [Exposed] interface Property {
             readonly attribute string name;
             readonly attribute PropertyPath path;
             readonly attribute ShapeID valueShape;
@@ -471,16 +472,16 @@
               This shape matches IRI or blank term value into a property <code>"iri"</code> of itself:
             </p>
             <pre class="ttl">
-            ex:ItemShape a :ObjectShape;
-              :property [
-                :name "iri";
-                :path ();
-                :shape [ a :ResourceShape ]
+            ex:ItemShape a ramp:Record;
+              ramp:property [
+                ramp:name "iri";
+                ramp:path ();
+                ramp:shape [ a ramp:Resource ]
               ];
-              :property [
-                :name "label";
-                :path rdfs:label;
-                :shape [ a :LiteralShape; :termDatatype xsd:string ]
+              ramp:property [
+                ramp:name "label";
+                ramp:path rdfs:label;
+                ramp:shape [ a ramp:Literal; ramp:termDatatype xsd:string ]
               ].
             </pre>
             <table class="ramp-op-result">
@@ -509,17 +510,17 @@
               <a data-link-for="RamOperations">flatten()</a>:
             </p>
             <pre class="ttl">
-            ex:ManifestShape a :ObjectShape;
-              :typeProperty [
-                :name "type";
-                :path rdf:type;
-                :transient true;
-                :shape [ a :ResourceShape; :termValue sc:Manifest ]
+            ex:ManifestShape a ramp:Record;
+              ramp:typeProperty [
+                ramp:name "type";
+                ramp:path rdf:type;
+                ramp:transient true;
+                ramp:shape [ a ramp:Resource; ramp:termValue sc:Manifest ]
               ];
-              :property [
-                :name "label";
-                :path rdfs:label;
-                :shape [ a :LiteralShape; :termDatatype xsd:string ]
+              ramp:property [
+                ramp:name "label";
+                ramp:path rdfs:label;
+                ramp:shape [ a ramp:Literal; ramp:termDatatype xsd:string ]
               ].
             </pre>
             <table class="ramp-op-result">
@@ -536,16 +537,16 @@
           </aside>
         </section>
       </section>
-      <section data-dfn-for="UnionShape" data-link-for="UnionShape">
-        <h3><dfn>UnionShape</dfn> type</h3>
+      <section data-dfn-for="AnyOfShape" data-link-for="AnyOfShape">
+        <h3><dfn>AnyOfShape</dfn> type</h3>
         <p>
-          <a>UnionShape</a> describes a sum (coproduct) type of several types.
+          <a>AnyOfShape</a> describes a sum (coproduct) type of several types.
           The <dfn>variants</dfn> are unordered, which means matching operations
           may produce results in arbitrary order when the same candidate term
           matches multiple variant types.
         </p>
         <pre class="idl">
-        [Exposed] interface UnionShape : ShapeBase {
+        [Exposed] interface AnyOfShape : ShapeBase {
           /** type == "union" */
           readonly attribute string type;
           getter sequence&lt;ShapeID&gt; variants();
@@ -557,11 +558,11 @@
             or <code>xsd:boolean</code> terms:
           </p>
           <pre class="ttl">
-          ex:SimpleLiteral a :UnionShape;
-            :variant
-              [ a :LiteralShape; :termDatatype xsd:integer ],
-              [ a :LiteralShape; :termDatatype xsd:string ],
-              [ a :LiteralShape; :termDatatype xsd:boolean ].
+          ex:SimpleLiteral a ramp:AnyOf;
+            ramp:variant
+              [ a ramp:Literal; ramp:termDatatype xsd:integer ],
+              [ a ramp:Literal; ramp:termDatatype xsd:string ],
+              [ a ramp:Literal; ramp:termDatatype xsd:boolean ].
           </pre>
           <table class="ramp-op-result">
             <tr>
@@ -583,10 +584,10 @@
             This shape matches either a a single string or RDF list of strings:
           </p>
           <pre class="ttl">
-          ex:StringOrList a :UnionShape;
-            :variant
-              [ a :LiteralShape; :termDatatype xsd:string ],
-              [ a :ListShape; :item [ a :LiteralShape; :termDatatype xsd:string ] ].
+          ex:StringOrList a ramp:AnyOf;
+            ramp:variant
+              [ a ramp:Literal; ramp:termDatatype xsd:string ],
+              [ a ramp:List; ramp:item [ a ramp:Literal; ramp:termDatatype xsd:string ] ].
           </pre>
           <table class="ramp-op-result">
             <tr>
@@ -616,7 +617,7 @@
         </p>
         <p>
           Although this type could also be represented as
-          a <a>UnionShape</a> by introducing a <code>Nothing</code> unit type like
+          a <a>AnyOfShape</a> by introducing a <code>Nothing</code> unit type like
           <a>null</a> in C-like languages, the optional type more closely resembles
           the semantics of programming languages with either no explicit <code>nothing</code>
           type or multiple such types instead (e.g. <a>null</a> and <a>undefined</a>
@@ -637,8 +638,8 @@
             match e.g. <code>xsd:integer</code> literal):
           </p>
           <pre class="ttl">
-          ex:MaybeString a :OptionalShape;
-            :item [ :LiteralShape; :termDatatype xsd:string ].
+          ex:MaybeString a ramp:Optional;
+            ramp:item [ ramp:Literal; ramp:termDatatype xsd:string ].
           </pre>
           <table class="ramp-op-result">
             <tr>
@@ -651,23 +652,23 @@
             </tr>
           </table>
         </aside>
-        <aside class="example" title="Optional object property">
+        <aside class="example" title="Optional record property">
           <p>
-            This shape matches an object with optional property value:
+            This shape matches a record with optional property value:
           </p>
           <pre class="ttl">
-          ex:LocationShape a :ObjectShape;
-            :typeProperty [
-              :name "type";
-              :path rdf:type;
-              :shape [ a :ResourceShape; :termValue ex:Location ]
+          ex:LocationShape a ramp:Record;
+            ramp:typeProperty [
+              ramp:name "type";
+              ramp:path rdf:type;
+              ramp:shape [ a ramp:Resource; ramp:termValue ex:Location ]
             ]
-            :property [
-              :name "label";
-              :path rdfs:label;
-              :shape [
-                a :OptionalShape;
-                :item [ :LiteralShape; :termDatatype xsd:string ]
+            ramp:property [
+              ramp:name "label";
+              ramp:path rdfs:label;
+              ramp:shape [
+                a ramp:Optional;
+                ramp:item [ ramp:Literal; ramp:termDatatype xsd:string ]
               ]
             ].
           </pre>
@@ -719,8 +720,8 @@
             This shape matches a set (unordered array) of <code>xsd:integer</code> literals:
           </p>
           <pre class="ttl">
-          ex:IntegerSet a :SetShape;
-            :item [ a :LiteralShape; :termDatatype xsd:integer ].
+          ex:IntegerSet a ramp:Set;
+            ramp:item [ a ramp:Literal; ramp:termDatatype xsd:integer ].
           </pre>
           <table class="ramp-op-result">
             <tr>
@@ -746,10 +747,10 @@
             This shape matches a set with &gt;= 1 and &lt;= 3 <code>xsd:string</code> items:
           </p>
           <pre class="ttl">
-          ex:BoundedSet a :SetShape;
-            :item [ a :LiteralShape; :termDatatype xsd:string ]
-            :minCount 1;
-            :maxCount 3.
+          ex:BoundedSet a ramp:Set;
+            ramp:item [ a ramp:Literal; ramp:termDatatype xsd:string ]
+            ramp:minCount 1;
+            ramp:maxCount 3.
           </pre>
           <table class="ramp-op-result">
             <tr>
@@ -766,18 +767,18 @@
             </tr>
           </table>
         </aside>
-        <aside class="example" title="Object property with multiple values">
+        <aside class="example" title="Record property with multiple values">
           <p>
-            This shape matches an object with multiple property values:
+            This shape matches a record with multiple property values:
           </p>
           <pre class="ttl">
-          ex:LotteryResult a :ObjectShape;
-            :property [
-              :name "winningNumbers";
-              :path ex:winningNumber;
-              :shape [
-                a :SetShape;
-                :item [ :LiteralShape; :termDatatype xsd:integer ]
+          ex:LotteryResult a ramp:Record;
+            ramp:property [
+              ramp:name "winningNumbers";
+              ramp:path ex:winningNumber;
+              ramp:shape [
+                a ramp:Set;
+                ramp:item [ ramp:Literal; ramp:termDatatype xsd:integer ]
               ]
             ].
           </pre>
@@ -831,8 +832,8 @@
             e.g. <code>(1 2 3)</code> framed as <code>[1, 2, 3]</code>:
           </p>
           <pre class="ttl">
-          ex:IntegerList a :ListShape;
-            :item [ a :LiteralShape; :termDatatype xsd:integer ].
+          ex:IntegerList a ramp:List;
+            ramp:item [ a ramp:Literal; ramp:termDatatype xsd:integer ].
           </pre>
           <table class="ramp-op-result">
             <tr>
@@ -892,35 +893,35 @@
         </pre>
         <aside class="example" title="Map shape indexed by property">
           <p>
-            This shape matches an unordered set of objects and indexes it by <code>"name"</code> property,
+            This shape matches an unordered set of records and indexes it by <code>"name"</code> property,
             so the framed object looks like <code>{ [propertyName: string]: string | integer | boolean }</code>:
           </p>
           <pre class="ttl">
-          ex:PropertyMap a :MapShape;
-            :item [
-              a :ObjectShape;
-              :property [
-                :name "name";
-                :path ex:propertyName;
-                :shape _:propertyNameShape
+          ex:PropertyMap a ramp:Map;
+            ramp:item [
+              a ramp:Record;
+              ramp:property [
+                ramp:name "name";
+                ramp:path ex:propertyName;
+                ramp:shape _:propertyNameShape
               ];
-              :property [
-                :name "value";
-                :path ex:propertyValue;
-                :shape _:propertyValueShape
+              ramp:property [
+                ramp:name "value";
+                ramp:path ex:propertyValue;
+                ramp:shape _:propertyValueShape
               ]
             ];
-            :mapKey [ :shape _:propertyNameShape ];
-            :mapValue [ :shape _:propertyValueShape ].
+            ramp:mapKey [ ramp:shape _:propertyNameShape ];
+            ramp:mapValue [ ramp:shape _:propertyValueShape ].
 
-          _:propertyNameShape a :LiteralShape;
-            :termDatatype xsd:string.
+          _:propertyNameShape a ramp:Literal;
+            ramp:termDatatype xsd:string.
 
-          _:propertyValueShape a :UnionShape;
-            :variant
-              [ a :LiteralShape; :termDatatype xsd:string ],
-              [ a :LiteralShape; :termDatatype xsd:integer ],
-              [ a :LiteralShape; :termDatatype xsd:boolean ].
+          _:propertyValueShape a ramp:AnyOf;
+            ramp:variant
+              [ a ramp:Literal; ramp:termDatatype xsd:string ],
+              [ a ramp:Literal; ramp:termDatatype xsd:integer ],
+              [ a ramp:Literal; ramp:termDatatype xsd:boolean ].
           </pre>
           <table class="ramp-op-result">
             <tr>
@@ -972,13 +973,13 @@
               <code>{ [languageTag: string]: string }</code>:
             </p>
             <pre class="ttl">
-            ex:LocalizedLabels a :MapShape;
-              :item labelLiteral;
-              :mapKey [ :shape _:labelLiteral; :termPart :TermLanguage ];
-              :mapValue [ :shape _:labelLiteral; :termPart :TermValue ].
+            ex:LocalizedLabels a ramp:Map;
+              ramp:item labelLiteral;
+              ramp:mapKey [ ramp:shape _:labelLiteral; ramp:termPart ramp:TermLanguage ];
+              ramp:mapValue [ ramp:shape _:labelLiteral; ramp:termPart ramp:TermValue ].
   
-            _:labelLiteral a :LiteralShape;
-              :termDatatype rdf:langString.
+            _:labelLiteral a ramp:Literal;
+              ramp:termDatatype rdf:langString.
             </pre>
             <table class="ramp-op-result">
               <tr>
@@ -1047,10 +1048,10 @@
           </pre>
           <aside class="example" title="Simple predicate path">
             <pre class="ttl">
-            _:shape :property [
-              :name "type";
-              :path rdf:type;
-              :shape [ a :ResourceShape ]
+            _:shape ramp:property [
+              ramp:name "type";
+              ramp:path rdf:type;
+              ramp:shape [ a ramp:Resource ]
             ].
             </pre>
           </aside>
@@ -1070,19 +1071,19 @@
           </pre>
           <aside class="example" title="Simple sequence path">
             <pre class="ttl">
-            _:shape :property [
-              :name "typeName";
-              :path (rdf:type rdfs:label);
-              :shape [ a :LiteralShape ]
+            _:shape ramp:property [
+              ramp:name "typeName";
+              ramp:path (rdf:type rdfs:label);
+              ramp:shape [ a ramp:Literal ]
             ].
             </pre>
           </aside>
           <aside class="example" title="Self-referencing path">
             <pre class="ttl">
-            _:shape :property [
-              :name "iri";
-              :path ();
-              :shape [ a :ResourceShape ]
+            _:shape ramp:property [
+              ramp:name "iri";
+              ramp:path ();
+              ramp:shape [ a ramp:Resource ]
             ].
             </pre>
           </aside>
@@ -1102,10 +1103,10 @@
           </pre>
           <aside class="example" title="Inverse path">
             <pre class="ttl">
-            _:classShape :property [
-              :name "derivedClasses";
-              :path [ :inversePath rdfs:subClassOf ];
-              :shape [ a :SetShape; :item _:classShape ]
+            _:classShape ramp:property [
+              ramp:name "derivedClasses";
+              ramp:path [ ramp:inversePath rdfs:subClassOf ];
+              ramp:shape [ a ramp:Set; ramp:item _:classShape ]
             ].
             </pre>
           </aside>
@@ -1125,10 +1126,10 @@
           </pre>
           <aside class="example" title="Alternative path">
             <pre class="ttl">
-            _:shape :property [
-              :name "labels";
-              :path [ :alternativePath (rdf:label skos:prefLabel) ];
-              :shape [ a :SetShape; :item [ a :LiteralShape ] ]
+            _:shape ramp:property [
+              ramp:name "labels";
+              ramp:path [ ramp:alternativePath (rdf:label skos:prefLabel) ];
+              ramp:shape [ a ramp:Set; ramp:item [ a ramp:Literal ] ]
             ].
             </pre>
           </aside>
@@ -1148,10 +1149,10 @@
           </pre>
           <aside class="example" title="Zero or more repetitions of path">
             <pre class="ttl">
-            _:shape :property [
-              :name "transitiveTypes";
-              :path (rdf:type [ :zeroOrMore rdfs:subClassOf ]);
-              :shape [ a :SetShape; :item [ a :ResourceShape ] ]
+            _:shape ramp:property [
+              ramp:name "transitiveTypes";
+              ramp:path (rdf:type [ ramp:zeroOrMore rdfs:subClassOf ]);
+              ramp:shape [ a ramp:Set; ramp:item [ a ramp:Resource ] ]
             ].
             </pre>
           </aside>
@@ -1171,10 +1172,10 @@
           </pre>
           <aside class="example" title="Zero or one repetitions of path">
             <pre class="ttl">
-            _:shape :property [
-              :name "value";
-              :path (ex:hasValue [ :zeroOrOne rdf:value ]);
-              :shape [ a :LiteralShape ]
+            _:shape ramp:property [
+              ramp:name "value";
+              ramp:path (ex:hasValue [ ramp:zeroOrOne rdf:value ]);
+              ramp:shape [ a ramp:Literal ]
             ].
             </pre>
           </aside>
@@ -1194,10 +1195,10 @@
           </pre>
           <aside class="example" title="One or more repetitions of path">
             <pre class="ttl">
-            _:shape :property [
-              :name "parentTypes";
-              :path [ :oneOrMore rdfs:subClassOf ];
-              :shape [ a :SetShape; :item [ a :ResourceShape ] ]
+            _:shape ramp:property [
+              ramp:name "parentTypes";
+              ramp:path [ ramp:oneOrMore rdfs:subClassOf ];
+              ramp:shape [ a ramp:Set; ramp:item [ a ramp:Resource ] ]
             ].
             </pre>
           </aside>
@@ -1242,9 +1243,9 @@
             downwards from <a>shape</a>, changing at these points:
             <ul>
               <li>
-                If <a>ObjectShape</a> has <a data-lt="ObjectShape.typeProperties">typeProperties</a>
+                If <a>RecordShape</a> has <a data-lt="RecordShape.typeProperties">typeProperties</a>
                 then the mode switches to <code>strict</code> when matching other
-                <a data-lt="ObjectShape.properties">properties</a>.
+                <a data-lt="RecordShape.properties">properties</a>.
               </li>
               <li>
                 If a shape set <a data-lt="ShapeBase.lenient">lenient</a> property to
@@ -1353,12 +1354,12 @@
                 </ol>
               </li>
             </ol>
-            <p><dfn id="alg-frame-object">Frame
-              <sub><a>ObjectShape</a></sub>(
+            <p><dfn id="alg-frame-record">Frame
+              <sub><a>RecordShape</a></sub>(
               <var>shape</var>, <var>candidates</var>, <var>strict</var>)</dfn>:</p>
             <p class="ramp-todo">TODO</p>
-            <p><dfn id="alg-frame-union">Frame
-              <sub><a>UnionShape</a></sub>(
+            <p><dfn id="alg-frame-anyOf">Frame
+              <sub><a>AnyOfShape</a></sub>(
               <var>shape</var>, <var>candidates</var>, <var>strict</var>)</dfn>:</p>
             <p class="ramp-todo">TODO</p>
             <ol>
